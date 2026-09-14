@@ -1,0 +1,7 @@
+backup-*/
+.env
+.env.*
+node_modules/
+mydiary_backup_*
+mydiary_recovery*
+*.log

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" data-theme="warm">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Diary</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<section id="account" hidden>
+ <h1>My Diary</h1><h2 id="auth-heading">Sign in</h2><p id="account-message" role="status">Sign in to your private journal.</p>
+ <form id="auth-form" novalidate>
+ <label>Email<input id="email" type="email" autocomplete="username" required></label>
+ <label>Password<input id="password" type="password" autocomplete="current-password" required aria-describedby="password-help"></label>
+ <small id="password-help" hidden>Choose a password with at least 8 characters.</small>
+ <div class="row"><button id="sign-in" class="primary" type="submit">Sign in</button><button id="sign-up" type="button">Create account</button></div>
+ <button id="back-to-sign-in" type="button" hidden>Back to sign in</button>
+ </form>
+</section>
+<button id="backdrop" aria-label="Close library" hidden></button>
+<aside id="sidebar">
+ <header><div class="brand">📖 My Diary <button id="close-menu" class="mobile" aria-label="Close library">✕</button></div>
+ <label>Theme<select id="theme"><option value="warm">Warm</option><option value="cool">Cool</option><option value="dark">Dark</option></select></label>
+ <a class="schedule-link" href="schedules.html" target="_blank" rel="noopener">School schedules ↗</a>
+ <small id="account-email" hidden></small><button id="sign-out" hidden>Sign out</button>
+ <button id="new" class="primary">+ New entry</button>
+ <label>Search<input id="search" type="search" placeholder="Titles, writing, and tags"></label>
+ <div class="row"><label>Mood<select id="filter"><option value="all">All moods</option><option>Happy</option><option>Sad</option><option>Neutral</option><option>Excited</option><option>Anxious</option></select></label><label>Library<select id="view"><option value="entries">Entries</option><option value="trash">Trash</option></select></label></div></header>
+ <p id="count" class="muted"></p><ul id="entries"></ul>
+ <footer><div class="row"><button id="export">Export JSON</button><button id="import">Import / Restore</button></div><button id="markdown">Export Markdown</button><input id="file" type="file" accept=".json,application/json" hidden><small id="backup">No backup exported yet</small><small><span id="storage-help">Saved in this browser.</span> Export a backup to keep a portable copy.</small></footer>
+</aside>
+<main>
+ <div class="topbar"><button id="menu" class="mobile" aria-controls="sidebar" aria-expanded="false" aria-label="Open library">☰</button><span id="status" role="status" aria-live="polite">Ready</span><button id="save">Save <kbd>Ctrl/⌘ S</kbd></button></div>
+ <div id="notice" role="alert" hidden></div>
+ <section id="empty" hidden><h1>Your quiet place</h1><p>Create an entry to start writing.</p><button id="empty-new" class="primary">New entry</button></section>
+ <section id="editor">
+ <div class="row metadata"><label>Date<input id="date" type="date" required></label><label>Mood<select id="mood"><option>Happy</option><option>Sad</option><option selected>Neutral</option><option>Excited</option><option>Anxious</option></select></label><label class="grow">Tags<input id="tags" placeholder="Separate with commas"></label></div>
+ <label class="sr-only" for="title">Entry title</label><input id="title" placeholder="Untitled entry" autocomplete="off">
+ <div class="toolbar" role="toolbar" aria-label="Markdown formatting"><button data-format="bold" aria-label="Bold"><b>B</b></button><button data-format="italic" aria-label="Italic"><i>I</i></button><button data-format="bullet">• List</button><button data-format="number">1. List</button><button id="prompt">✨ Prompt</button><span class="muted">Markdown text</span></div>
+ <label class="sr-only" for="body">Journal entry</label><textarea id="body" placeholder="Start writing your thoughts here…"></textarea>
+ <footer class="row"><span id="words">0 words</span><span id="streak">0 day streak</span><button id="restore" hidden>Restore entry</button><button id="delete" class="danger">Move to Trash</button></footer>
+ </section>
+</main>
+<dialog id="merge"><h2>Import backup</h2><p id="merge-summary"></p><label>Entries with matching IDs<select id="merge-choice"><option value="keep">Keep current entries</option><option value="newer">Use the more recently updated entry</option><option value="import">Use imported entries</option></select></label><p>Check the counts before applying. Export your current journal first if you want a separate recovery copy.</p><div class="row"><button id="cancel-import">Cancel</button><button id="apply-import" class="primary">Import</button></div></dialog>
+<script src="config.js"></script><script src="core.js"></script><script src="cloud.js"></script><script src="app.js"></script>
+</body></html>

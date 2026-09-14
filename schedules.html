@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en" data-theme="warm">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>School schedules · My Diary</title><link rel="stylesheet" href="schedules.css"></head>
+<body>
+<header class="page-header"><a href="index.html">← My Diary</a><div class="actions"><label>Theme <select id="theme"><option value="warm">Warm</option><option value="cool">Cool</option><option value="dark">Dark</option></select></label><button id="print">Print / PDF</button></div></header>
+<main>
+<div class="controls"><div class="switcher" role="group" aria-label="Choose schedule"><button data-schedule="0" aria-pressed="true">Schedule 1 · O. K.</button><button data-schedule="1" aria-pressed="false">Schedule 2</button></div><label class="compare"><input id="compare" type="checkbox"> Compare both</label></div>
+<nav id="days" aria-label="Choose day on small screens"></nav>
+<div id="schedules"></div>
+<p class="note">The same timetable every week. Small labels show rooms or groups; split lessons show both groups.</p>
+</main><script src="schedules.js"></script></body></html>
