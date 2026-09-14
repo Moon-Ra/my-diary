@@ -7,3 +7,5 @@
 .schedule-link{display:block;text-align:center;color:var(--primary);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:9px 12px;text-decoration:none}.schedule-link:hover{background:var(--hover)}
 
 #account{margin:auto;width:min(440px,100%);padding:24px}#auth-form{display:grid;gap:16px}body.locked>aside,body.locked>main,body.locked>#backdrop{display:none!important}#account-email{overflow-wrap:anywhere}
+
+#account{overflow:auto}#vault-form,#vault-new-fields,#vault-recovery{display:grid;gap:14px}#vault-panel p{font-size:.9rem}#vault-sign-out{margin-top:18px}#recovery-key{width:100%;font:14px/1.6 monospace;resize:vertical;background:var(--card);color:var(--text);padding:10px}#vault-message{white-space:pre-wrap}#decrypt-form{display:grid;gap:12px}

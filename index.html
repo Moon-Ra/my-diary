@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en" data-theme="warm">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Diary</title><link rel="stylesheet" href="style.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://cvlwmxhpvocsnvikpvjv.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"><title>My Diary</title><link rel="stylesheet" href="style.css"></head>
 <body>
 <section id="account" hidden>
  <h1>My Diary</h1><h2 id="auth-heading">Sign in</h2><p id="account-message" role="status">Sign in to your private journal.</p>
@@ -11,18 +11,38 @@
  <div class="row"><button id="sign-in" class="primary" type="submit">Sign in</button><button id="sign-up" type="button">Create account</button></div>
  <button id="back-to-sign-in" type="button" hidden>Back to sign in</button>
  </form>
+ <section id="vault-panel" hidden>
+  <p id="vault-message" role="status"></p>
+  <form id="vault-form" novalidate>
+   <label id="vault-secret-label">Vault passphrase<input id="vault-secret" type="password" autocomplete="off" maxlength="1024"></label>
+   <div id="vault-new-fields" hidden>
+    <label>New vault passphrase<input id="vault-new" type="password" autocomplete="new-password" minlength="12" maxlength="1024"></label>
+    <label>Repeat vault passphrase<input id="vault-confirm" type="password" autocomplete="new-password" maxlength="1024"></label>
+    <p>Use a different passphrase from your account password. It never leaves this browser. If you lose both it and your recovery key, your journal cannot be recovered.</p>
+   </div>
+   <section id="vault-recovery" hidden>
+    <label>Your recovery key<textarea id="recovery-key" readonly rows="3" spellcheck="false"></textarea></label>
+    <button id="download-recovery" type="button">Download recovery key</button>
+    <p>Keep this key in a password manager or another safe place. Anyone with it and an encrypted backup can read that backup.</p>
+    <label>Enter the last 8 characters of your saved recovery key<input id="recovery-check" autocomplete="off" maxlength="8" spellcheck="false"></label>
+   </section>
+   <button id="vault-submit" class="primary" type="submit">Unlock diary</button>
+   <button id="vault-use-recovery" type="button">Use recovery key</button>
+  </form>
+  <button id="vault-sign-out" type="button">Sign out</button>
+ </section>
 </section>
 <button id="backdrop" aria-label="Close library" hidden></button>
 <aside id="sidebar">
  <header><div class="brand">📖 My Diary <button id="close-menu" class="mobile" aria-label="Close library">✕</button></div>
  <label>Theme<select id="theme"><option value="warm">Warm</option><option value="cool">Cool</option><option value="dark">Dark</option></select></label>
  <a class="schedule-link" href="schedules.html" target="_blank" rel="noopener">School schedules ↗</a>
- <small id="account-email" hidden></small><button id="sign-out" hidden>Sign out</button>
+ <small id="account-email" hidden></small><button id="lock-vault" hidden>Lock diary</button><button id="sign-out" hidden>Sign out</button>
  <button id="new" class="primary">+ New entry</button>
  <label>Search<input id="search" type="search" placeholder="Titles, writing, and tags"></label>
  <div class="row"><label>Mood<select id="filter"><option value="all">All moods</option><option>Happy</option><option>Sad</option><option>Neutral</option><option>Excited</option><option>Anxious</option></select></label><label>Library<select id="view"><option value="entries">Entries</option><option value="trash">Trash</option></select></label></div></header>
  <p id="count" class="muted"></p><ul id="entries"></ul>
- <footer><div class="row"><button id="export">Export JSON</button><button id="import">Import / Restore</button></div><button id="markdown">Export Markdown</button><input id="file" type="file" accept=".json,application/json" hidden><small id="backup">No backup exported yet</small><small><span id="storage-help">Saved in this browser.</span> Export a backup to keep a portable copy.</small></footer>
+ <footer><div class="row"><button id="export">Export JSON</button><button id="import">Import / Restore</button></div><button id="markdown">Export Markdown (unencrypted)</button><input id="file" type="file" accept=".json,application/json" hidden><small id="backup">No backup exported yet</small><small><span id="storage-help">Saved in this browser.</span> Export a backup to keep a portable copy.</small></footer>
 </aside>
 <main>
  <div class="topbar"><button id="menu" class="mobile" aria-controls="sidebar" aria-expanded="false" aria-label="Open library">☰</button><span id="status" role="status" aria-live="polite">Ready</span><button id="save">Save <kbd>Ctrl/⌘ S</kbd></button></div>
@@ -37,5 +57,9 @@
  </section>
 </main>
 <dialog id="merge"><h2>Import backup</h2><p id="merge-summary"></p><label>Entries with matching IDs<select id="merge-choice"><option value="keep">Keep current entries</option><option value="newer">Use the more recently updated entry</option><option value="import">Use imported entries</option></select></label><p>Check the counts before applying. Export your current journal first if you want a separate recovery copy.</p><div class="row"><button id="cancel-import">Cancel</button><button id="apply-import" class="primary">Import</button></div></dialog>
-<script src="config.js"></script><script src="core.js"></script><script src="cloud.js"></script><script src="app.js"></script>
+<dialog id="decrypt-backup"><h2>Open encrypted backup</h2><p>Your backup is decrypted in this browser before the import preview.</p>
+ <form id="decrypt-form"><label>Unlock with<select id="backup-method"><option value="passphrase">Vault passphrase used for this backup</option><option value="recovery">Recovery key</option></select></label>
+ <label>Passphrase or recovery key<input id="backup-secret" type="password" autocomplete="off" required></label>
+ <p id="backup-message" role="status"></p><div class="row"><button id="decrypt-cancel" type="button">Cancel</button><button id="decrypt-submit" type="submit">Open backup</button></div></form></dialog>
+<script src="config.js"></script><script src="core.js"></script><script src="vault.js"></script><script src="cloud.js"></script><script src="app.js"></script>
 </body></html>

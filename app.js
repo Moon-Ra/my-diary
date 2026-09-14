@@ -2,6 +2,8 @@
 const C=DiaryCore, $=id=>document.getElementById(id), KEY='mydiary_data';
 const config=window.DIARY_CONFIG||{}, cloudMode=Boolean(config.supabaseUrl||config.supabaseKey);
 let cloud=null, client=null, accountId=null, ready=!cloudMode;
+let vault=null, vaultSnapshot=null, setupDraft=null, vaultMode=null, vaultBusy=false, encryptedImport=null;
+let accountEpoch=0;
 let entries=[], current=null, baseline=null, blocked=false, incoming=null, dirty=false;
 const prompts=['What made you smile today?','What challenged you today, and what helped?','What are you grateful for right now?','What small step could you take toward a goal?','What did you learn this week?','Write a letter to your past self.'];
 function notice(message){$('notice').textContent=message;$('notice').hidden=!message;}
@@ -49,7 +51,14 @@ function load(id){
 }
 function create(){if(!ready)return;const e={id:crypto.randomUUID(),title:'',content:'',date:C.today(),mood:'Neutral',tags:[],updatedAt:new Date().toISOString(),deletedAt:null};entries.push(e);$('view').value='entries';$('search').value='';$('filter').value='all';persist();load(e.id);setMenu(false);$('title').focus();}
 function download(content,name,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
-function exportJSON(){download(JSON.stringify(envelope(),null,2),`mydiary_backup_${C.today()}.json`,'application/json');const stamp=new Date().toISOString();try{localStorage.setItem('mydiary_last_export',stamp);}catch{}$('backup').textContent='Backup export requested '+new Date(stamp).toLocaleString();}
+async function exportJSON(){
+ try{
+  const backup=cloudMode?await DiaryVault.encrypt(vault,entries):envelope();
+  download(JSON.stringify(backup,null,2),`mydiary_${cloudMode?'encrypted_':''}backup_${C.today()}.json`,'application/json');
+  const stamp=new Date().toISOString();try{localStorage.setItem('mydiary_last_export',stamp);}catch{}
+  $('backup').textContent='Backup export requested '+new Date(stamp).toLocaleString();
+ }catch(error){notice('Could not export backup: '+error.message);}
+}
 function setMenu(open){$('sidebar').classList.toggle('open',open);$('backdrop').hidden=!open;$('menu').setAttribute('aria-expanded',String(open));if(matchMedia('(max-width:768px)').matches){document.querySelector('main').inert=open;if(open)$('close-menu').focus();else $('menu').focus();}}
 $('new').onclick=$('empty-new').onclick=create;$('save').onclick=save;
 for(const id of ['title','body','tags','mood'])$(id).addEventListener('input',save);
@@ -59,9 +68,34 @@ $('view').onchange=()=>load(entries.find(e=>Boolean(e.deletedAt)===($('view').va
 $('delete').onclick=()=>{const e=active();if(!e)return;e.deletedAt=e.updatedAt=new Date().toISOString();persist();load(entries.find(x=>!x.deletedAt)?.id||null);};
 $('restore').onclick=()=>{const e=active();if(!e)return;e.deletedAt=null;e.updatedAt=new Date().toISOString();persist();$('view').value='entries';load(e.id);};
 $('export').onclick=exportJSON;
-$('markdown').onclick=()=>{const text=entries.filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`# ${e.title||'Untitled entry'}\n\n${e.date} · ${e.mood}${e.tags.length?' · '+e.tags.join(', '):''}\n\n${e.content}\n`).join('\n---\n\n');download(text,`mydiary_${C.today()}.md`,'text/markdown;charset=utf-8');};
+$('markdown').onclick=()=>{if(!confirm('This Markdown file contains your unencrypted journal text. Export it?'))return;const text=entries.filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`# ${e.title||'Untitled entry'}\n\n${e.date} · ${e.mood}${e.tags.length?' · '+e.tags.join(', '):''}\n\n${e.content}\n`).join('\n---\n\n');download(text,`mydiary_${C.today()}.md`,'text/markdown;charset=utf-8');};
 $('import').onclick=()=>$('file').click();
-$('file').onchange=async()=>{const file=$('file').files[0];$('file').value='';if(!file)return;try{incoming=C.validate(JSON.parse(await file.text()));const ids=new Set(entries.map(e=>e.id)), conflicts=incoming.filter(e=>ids.has(e.id)).length;$('merge-summary').textContent=`${incoming.length} entries: ${incoming.length-conflicts} new, ${conflicts} matching IDs. Backups include Trash.`;$('merge-choice').value='keep';$('merge').showModal();}catch(e){notice('Import rejected: '+e.message);}};
+function previewImport(data){
+ incoming=C.validate(data);const ids=new Set(entries.map(e=>e.id)),conflicts=incoming.filter(e=>ids.has(e.id)).length;
+ $('merge-summary').textContent=`${incoming.length} entries: ${incoming.length-conflicts} new, ${conflicts} matching IDs. Backups include Trash.`;
+ $('merge-choice').value='keep';$('merge').showModal();
+}
+$('file').onchange=async()=>{
+ const file=$('file').files[0],epoch=accountEpoch;$('file').value='';if(!file)return;
+ try{const parsed=JSON.parse(await file.text());if(epoch!==accountEpoch||!ready)return;
+  if(parsed?.format==='my-diary-encrypted'){
+   encryptedImport=DiaryVault.validate(parsed);$('backup-secret').value='';$('backup-message').textContent='';$('decrypt-backup').showModal();
+  }else previewImport(parsed);
+ }catch(error){notice('Import rejected: '+error.message);}
+};
+$('decrypt-backup').addEventListener('close',()=>{encryptedImport=null;$('backup-secret').value='';});
+$('decrypt-cancel').onclick=()=>$('decrypt-backup').close();
+$('decrypt-form').onsubmit=async event=>{
+ event.preventDefault();const payload=encryptedImport,epoch=accountEpoch;
+ $('decrypt-submit').disabled=true;$('backup-message').textContent='Decrypting…';
+ try{
+  const key=await DiaryVault.unlock(payload,$('backup-secret').value,$('backup-method').value);
+  const decoded=await DiaryVault.decrypt(key,payload);
+  if(payload!==encryptedImport||epoch!==accountEpoch)return;
+  $('decrypt-backup').close();previewImport(decoded);
+ }catch(error){$('backup-message').textContent=error.message;}
+ finally{$('decrypt-submit').disabled=false;}
+};
 $('cancel-import').onclick=()=>{incoming=null;$('merge').close();};
 $('apply-import').onclick=()=>{if(!incoming)return;entries=C.merge(entries,incoming,$('merge-choice').value);incoming=null;$('merge').close();persist();$('view').value='entries';load(entries.find(e=>!e.deletedAt)?.id||null);};
 $('theme').onchange=()=>{document.documentElement.dataset.theme=$('theme').value;try{localStorage.setItem('mydiary_theme',$('theme').value);}catch{}};
@@ -84,32 +118,110 @@ function lockAccount(message){
  ready=false;document.body.classList.add('locked');$('account').hidden=false;
  $('account-message').textContent=message;
 }
+function clearJournal(){
+ entries=[];current=null;incoming=null;encryptedImport=null;vault=null;setupDraft=null;vaultSnapshot=null;
+ for(const id of ['title','body','tags','date','search','vault-secret','vault-new','vault-confirm','recovery-key','recovery-check','backup-secret'])$(id).value='';
+ $('mood').value='Neutral';$('filter').value='all';$('view').value='entries';$('merge').close();$('decrypt-backup').close();notice('');load(null);
+}
+function showJournal(loaded){
+ entries=loaded;ready=true;dirty=false;document.body.classList.remove('locked');$('account').hidden=true;
+ $('account-email').hidden=false;$('sign-out').hidden=false;$('lock-vault').hidden=false;
+ $('storage-help').textContent='Encrypted in this browser before saving.';$('export').textContent='Export encrypted backup';
+ $('status').textContent='Encrypted vault unlocked';
+ load([...entries].filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null);
+}
+function showVault(mode){
+ vaultMode=mode;setupDraft=null;
+ $('auth-form').hidden=true;$('vault-panel').hidden=false;
+ $('auth-heading').textContent=mode==='setup'?'Encrypt your diary':mode==='recover'?'Recover your diary':'Unlock your diary';
+ $('account-message').textContent='Signed in as '+$('account-email').textContent;
+ $('vault-secret-label').hidden=mode==='setup';$('vault-new-fields').hidden=mode==='unlock';
+ $('vault-recovery').hidden=true;$('vault-use-recovery').hidden=mode==='setup';
+ $('vault-use-recovery').textContent=mode==='recover'?'Use vault passphrase':'Use recovery key';
+ $('vault-secret-label').firstChild.textContent=mode==='recover'?'Recovery key':'Vault passphrase';
+ for(const id of ['vault-secret','vault-new','vault-confirm','recovery-key','recovery-check'])$(id).value='';
+ $('vault-submit').textContent=mode==='setup'?'Create encryption keys':mode==='recover'?'Set new passphrase and unlock':'Unlock diary';
+ $('vault-message').textContent=mode==='setup'?`Set up encryption for ${vaultSnapshot.legacy.length} existing entries, including Trash. Their live database copies will be replaced with encrypted data. Old exports and provider backups are not erased.`:
+ mode==='recover'?'Enter your recovery key and choose a new vault passphrase. Your recovery key will stay the same.':'Enter your vault passphrase. Your account password cannot unlock this vault.';
+ (mode==='setup'?$('vault-new'):$('vault-secret')).focus();
+}
 async function openAccount(session){
- if(!session){
-  if(dirty){lockAccount('Session ended. Export your unsaved writing below before signing in again.');
-   if(!$('recover-session')){const b=document.createElement('button');b.id='recover-session';b.textContent='Export unsaved journal';b.onclick=exportJSON;$('account').append(b);}
-   $('auth-form').hidden=true;return;
-  }
-  accountId=null;cloud=null;entries=[];load(null);lockAccount('Sign in to your private journal.');return;
+ if(session&&accountId===session.user.id)return;
+ const epoch=++accountEpoch;
+ if(dirty){
+  ready=false;clearTimeout(cloud?.timer);if(cloud)cloud.closed=true;
+  lockAccount('Session changed. Export your unsaved encrypted journal, then reload to sign in again.');
+  $('auth-form').hidden=true;$('vault-panel').hidden=true;
+  if(!$('recover-session')){const button=document.createElement('button');button.id='recover-session';button.textContent='Export unsaved encrypted journal';button.onclick=exportJSON;$('account').append(button);}
+  return;
  }
- if(accountId===session.user.id)return;
- if(dirty){lockAccount('Account changed while writing was unsaved. Export this session and reload.');$('auth-form').hidden=true;return;}
- accountId=session.user.id;
- lockAccount('Loading your journal…');
+ cloud?.close();cloud=null;clearJournal();accountId=session?.user.id||null;
+ $('vault-panel').hidden=true;$('vault-form').hidden=false;$('auth-form').hidden=!!session;
+ if(!session){lockAccount('Sign in to your private journal.');return;}
+ $('account-email').textContent=session.user.email;
+ lockAccount('Loading your encrypted vault…');
  const next=new DiaryCloud(client,(state,message)=>{
   if(cloud!==next)return;
   dirty=state!=='saved';
-  $('status').textContent=state==='saved'?'Saved to Supabase':state==='pending'?'Saving…':'Couldn’t save — export a backup';
+  $('status').textContent=state==='saved'?'Encrypted and saved':state==='pending'?'Encrypting and saving…':'Couldn’t save — export an encrypted backup';
   notice(state==='error'?message+' Your writing remains in this tab. Export before closing; press Save to retry.':'');
- });cloud=next;
+ },session.user.id);cloud=next;
  try{
-  const loaded=await next.load();if(cloud!==next)return;
-  entries=loaded;ready=true;dirty=false;document.body.classList.remove('locked');$('account').hidden=true;
-  $('account-email').hidden=false;$('account-email').textContent=session.user.email;$('sign-out').hidden=false;
-  $('storage-help').textContent='Saved privately to your Supabase account.';$('status').textContent='Saved to Supabase';
-  load([...entries].filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null);
- }catch(error){accountId=null;lockAccount('Could not load your journal: '+error.message+' Reload to retry.');}
+  const snapshot=await next.load();if(epoch!==accountEpoch)return;
+  vaultSnapshot=snapshot;showVault(snapshot.payload?'unlock':'setup');
+ }catch(error){
+  if(epoch!==accountEpoch)return;
+  lockAccount('Could not load the vault. '+(/diary_vault_snapshot/.test(error.message)?'The encryption database update must be applied first. ':error.message)+' Reload to retry.');
+  $('vault-panel').hidden=false;$('vault-form').hidden=true;
+ }
 }
+$('vault-use-recovery').onclick=()=>{if(!vaultBusy)showVault(vaultMode==='recover'?'unlock':'recover');};
+$('download-recovery').onclick=()=>{if(setupDraft)download('My Diary recovery key\nAccount: '+$('account-email').textContent+'\n'+setupDraft.recovery+'\nKeep this key private. It unlocks your encrypted journal backups.\n','mydiary_recovery_key.txt','text/plain');};
+$('vault-form').onsubmit=async event=>{
+ event.preventDefault();if(vaultBusy)return;
+ const epoch=accountEpoch,next=cloud,mode=vaultMode;
+ vaultBusy=true;for(const node of $('vault-form').querySelectorAll('button,input'))node.disabled=true;$('vault-sign-out').disabled=true;
+ $('vault-message').textContent=mode==='setup'?'Preparing encryption…':'Unlocking…';
+ try{
+  if(mode==='setup'&&!setupDraft){
+   DiaryVault.checkPassphrase($('vault-new').value);
+   if($('vault-new').value!==$('vault-confirm').value)throw Error('The vault passphrases do not match.');
+   const created=await DiaryVault.create($('vault-new').value,accountId);if(epoch!==accountEpoch)return;
+   setupDraft=created;$('vault-new').value=$('vault-confirm').value='';$('vault-new-fields').hidden=true;
+   $('recovery-key').value=created.recovery;$('vault-recovery').hidden=false;
+   $('vault-submit').textContent='Encrypt and save my diary';
+   $('vault-message').textContent='Save your recovery key now. Then enter its last 8 characters below to enable encryption.';return;
+  }
+  let unlocked,loaded;
+  if(mode==='setup'){
+   if($('recovery-check').value.trim().toLowerCase()!==setupDraft.recovery.slice(-8))throw Error('Save the recovery key and enter its last 8 characters.');
+   unlocked={key:setupDraft.key,keyring:setupDraft.keyring,owner:setupDraft.owner};loaded=vaultSnapshot.legacy;
+   await next.activate(unlocked,loaded);
+  }else if(mode==='recover'){
+   DiaryVault.checkPassphrase($('vault-new').value);
+   if($('vault-new').value!==$('vault-confirm').value)throw Error('The vault passphrases do not match.');
+   unlocked=await DiaryVault.recover(vaultSnapshot.payload,$('vault-secret').value,$('vault-new').value);
+   loaded=await DiaryVault.decrypt(unlocked,vaultSnapshot.payload);
+   await next.activate(unlocked,loaded);
+  }else{
+   unlocked=await DiaryVault.unlock(vaultSnapshot.payload,$('vault-secret').value);
+   loaded=await DiaryVault.decrypt(unlocked,vaultSnapshot.payload);next.vault=unlocked;
+  }
+  if(epoch!==accountEpoch)return;
+  vault=unlocked;setupDraft=null;vaultSnapshot=null;
+  for(const id of ['vault-secret','vault-new','vault-confirm','recovery-key','recovery-check'])$(id).value='';
+  showJournal(loaded);
+ }catch(error){if(epoch===accountEpoch)$('vault-message').textContent=error.message+' Nothing will be overwritten on a conflict. If a save result is uncertain, reload and unlock with your saved passphrase or recovery key.';}
+ finally{vaultBusy=false;for(const node of $('vault-form').querySelectorAll('button,input'))node.disabled=false;$('vault-sign-out').disabled=false;}
+};
+$('lock-vault').onclick=async()=>{
+ ready=false;$('sidebar').inert=true;document.querySelector('main').inert=true;
+ try{
+  if(!await cloud.flush()){notice('Export your unsaved encrypted backup before locking, or retry saving.');return;}
+  const session={user:{id:accountId,email:$('account-email').textContent}};
+  accountId=null;await openAccount(session);
+ }finally{$('sidebar').inert=false;document.querySelector('main').inert=false;ready=!document.body.classList.contains('locked');}
+};
 let signupMode=false, authBusy=false;
 function setAuthMode(signup){
  signupMode=signup;
@@ -157,6 +269,7 @@ $('password').oninput=()=>$('password').setCustomValidity('');
 $('auth-form').onsubmit=e=>{e.preventDefault();authenticate();};
 $('sign-up').onclick=()=>setAuthMode(true);
 $('back-to-sign-in').onclick=()=>{ $('password').setCustomValidity('');setAuthMode(false); };
+$('vault-sign-out').onclick=()=>{if(!vaultBusy)$('sign-out').onclick();};
 $('sign-out').onclick=async()=>{
  $('sign-out').disabled=true;ready=false;$('sidebar').inert=true;document.querySelector('main').inert=true;
  try{

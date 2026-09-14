@@ -5,3 +5,5 @@ node_modules/
 mydiary_backup_*
 mydiary_recovery*
 *.log
+mydiary_encrypted_backup_*
+mydiary_*.md

@@ -1,0 +1,12 @@
+{
+  "name": "my-diary",
+  "private": true,
+  "scripts": {
+    "test": "node --test core.test.cjs vault.test.cjs cloud.test.cjs supabase/vault.test.cjs",
+    "test:browser": "node browser.test.cjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "playwright": "1.63.0"
+  }
+}
