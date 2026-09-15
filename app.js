@@ -49,7 +49,7 @@ function load(id){
  document.querySelectorAll('.toolbar button').forEach(b=>b.disabled=!!e.deletedAt);$('restore').hidden=!e.deletedAt;$('delete').hidden=!!e.deletedAt;}
  render();
 }
-function create(){if(!ready)return;const e={id:crypto.randomUUID(),title:'',content:'',date:C.today(),mood:'Neutral',tags:[],updatedAt:new Date().toISOString(),deletedAt:null};entries.push(e);$('view').value='entries';$('search').value='';$('filter').value='all';persist();load(e.id);setMenu(false);$('title').focus();}
+function create(){if(!ready)return;const firstEntry=!active();const e={id:crypto.randomUUID(),title:'',content:'',date:C.today(),mood:'Neutral',tags:[],updatedAt:new Date().toISOString(),deletedAt:null};entries.push(e);$('view').value='entries';$('search').value='';$('filter').value='all';persist();load(e.id);setMenu(false);$('title').focus();if(firstEntry)window.DiaryPresentation?.reveal();}
 function download(content,name,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 async function exportJSON(){
  try{
@@ -129,6 +129,7 @@ function showJournal(loaded){
  $('storage-help').textContent='Encrypted in this browser before saving.';$('export').textContent='Export encrypted backup';
  $('status').textContent='Encrypted vault unlocked';
  load([...entries].filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null);
+ window.DiaryPresentation?.reveal();
 }
 function showVault(mode){
  vaultMode=mode;setupDraft=null;

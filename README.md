@@ -31,3 +31,5 @@ Publish the `main` branch from the repository root. `.nojekyll` ensures static f
 On phones, tap **☰ Entries** to browse earlier writing. Theme, schedules, account actions, and exports are under **Settings & backups** in the library.
 
 Themes: **Warm**, **Cool**, **Dark**, **Aurora · Futuristic**, and **Parchment · Rustic**. Choose a theme under Settings & backups; it is remembered by this browser and shared with School schedules. New themes use local font and texture assets in `assets/` (font licenses included). Keep `themes.js`, `themes.css`, and `assets/` with the site.
+
+The Parchment theme briefly unfurls like a scroll when selected or when the diary is unlocked, then reveals the writing. Ordinary edits and entry switching do not replay it. Typing or clicking the editor skips the effect; reduced-motion preferences show the page immediately.
