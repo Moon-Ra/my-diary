@@ -98,7 +98,6 @@ $('decrypt-form').onsubmit=async event=>{
 };
 $('cancel-import').onclick=()=>{incoming=null;$('merge').close();};
 $('apply-import').onclick=()=>{if(!incoming)return;entries=C.merge(entries,incoming,$('merge-choice').value);incoming=null;$('merge').close();persist();$('view').value='entries';load(entries.find(e=>!e.deletedAt)?.id||null);};
-$('theme').onchange=()=>{document.documentElement.dataset.theme=$('theme').value;try{localStorage.setItem('mydiary_theme',$('theme').value);}catch{}};
 $('library-tools').open=!matchMedia('(max-width:768px)').matches;
 $('menu').onclick=()=>setMenu(true);$('close-menu').onclick=$('backdrop').onclick=()=>setMenu(false);
 matchMedia('(max-width:768px)').addEventListener('change',()=>{$('library-tools').open=!matchMedia('(max-width:768px)').matches;document.querySelector('main').inert=false;setMenu(false);});
@@ -112,7 +111,7 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLower
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 window.addEventListener('storage',e=>{if(cloudMode)return;if(e.key!==KEY&&e.key!==null)return;blocked=true;$('status').textContent='Journal changed in another tab';notice('Another tab changed storage. Export this session, reload, and import the backup to merge entries.');});
 if(!cloudMode)try{baseline=localStorage.getItem(KEY);entries=baseline?C.validate(JSON.parse(baseline)):[];}catch(e){blocked=true;notice('Existing data could not be loaded and will not be overwritten. '+e.message);$('status').textContent='Storage unavailable or unreadable';if(baseline){const btn=document.createElement('button');btn.textContent='Download original data for recovery';btn.onclick=()=>download(baseline,'mydiary_recovery.json','application/json');$('notice').append(document.createElement('br'),btn);}}
-try{const theme=localStorage.getItem('mydiary_theme');if(['warm','cool','dark'].includes(theme)){$('theme').value=theme;document.documentElement.dataset.theme=theme;}const stamp=localStorage.getItem('mydiary_last_export');if(stamp)$('backup').textContent='Last export requested '+new Date(stamp).toLocaleString();}catch{}
+try{const stamp=localStorage.getItem('mydiary_last_export');if(stamp)$('backup').textContent='Last export requested '+new Date(stamp).toLocaleString();}catch{}
 load([...entries].filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null);
 
 function lockAccount(message){

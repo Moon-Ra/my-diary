@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en" data-theme="warm">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://cvlwmxhpvocsnvikpvjv.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"><title>My Diary</title><link rel="stylesheet" href="style.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://cvlwmxhpvocsnvikpvjv.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"><title>My Diary</title><script src="themes.js"></script><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="themes.css"></head>
 <body>
 <section id="account" hidden>
  <h1>My Diary</h1><h2 id="auth-heading">Sign in</h2><p id="account-message" role="status">Sign in to your private journal.</p>
@@ -34,12 +34,12 @@
 </section>
 <button id="backdrop" aria-label="Close library" hidden></button>
 <aside id="sidebar">
- <header><div class="brand">📖 My Diary <button id="close-menu" class="mobile" aria-label="Close library">✕</button></div>
+ <header><div class="brand"><span><span class="brand-icon" aria-hidden="true">📖</span> My Diary</span> <button id="close-menu" class="mobile" aria-label="Close library">✕</button></div>
  <button id="new" class="primary">+ New entry</button>
  <label>Search<input id="search" type="search" placeholder="Titles, writing, and tags"></label>
  <div class="row"><label>Mood<select id="filter"><option value="all">All moods</option><option>Happy</option><option>Sad</option><option>Neutral</option><option>Excited</option><option>Anxious</option></select></label><label>Library<select id="view"><option value="entries">Entries</option><option value="trash">Trash</option></select></label></div></header>
  <p id="count" class="muted"></p><ul id="entries"></ul>
- <footer><details id="library-tools" open><summary>Settings &amp; backups</summary><div class="library-tools-content"> <label>Theme<select id="theme"><option value="warm">Warm</option><option value="cool">Cool</option><option value="dark">Dark</option></select></label>
+ <footer><details id="library-tools" open><summary>Settings &amp; backups</summary><div class="library-tools-content"> <label>Theme<select id="theme"><option value="warm">Warm</option><option value="cool">Cool</option><option value="dark">Dark</option><option value="aurora">Aurora · Futuristic</option><option value="parchment">Parchment · Rustic</option></select></label>
  <a class="schedule-link" href="schedules.html" target="_blank" rel="noopener">School schedules ↗</a>
  <small id="account-email" hidden></small><button id="lock-vault" hidden>Lock diary</button><button id="sign-out" hidden>Sign out</button>
 <div class="row"><button id="export">Export JSON</button><button id="import">Import / Restore</button></div><button id="markdown">Export Markdown (unencrypted)</button><input id="file" type="file" accept=".json,application/json" hidden><small id="backup">No backup exported yet</small><small><span id="storage-help">Saved in this browser.</span> Export a backup to keep a portable copy.</small></div></details></footer>

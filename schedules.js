@@ -49,8 +49,4 @@ function render(){
 days.forEach((d,i)=>{const b=el('button','',d.slice(0,3));b.onclick=()=>{day=i;render();};$('days').append(b);});
 document.querySelectorAll('[data-schedule]').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.schedule);render();});
 $('compare').onchange=render;$('print').onclick=()=>window.print();
-function setTheme(theme){if(['warm','cool','dark'].includes(theme)){document.documentElement.dataset.theme=theme;$('theme').value=theme;}}
-try{setTheme(localStorage.getItem('mydiary_theme'));}catch{}
-$('theme').onchange=()=>{setTheme($('theme').value);try{localStorage.setItem('mydiary_theme',$('theme').value);}catch{}};
-window.addEventListener('storage',e=>{if(e.key==='mydiary_theme')setTheme(e.newValue);});
 render();

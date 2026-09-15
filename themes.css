@@ -1,0 +1,120 @@
+/* Fonts and texture are local assets. Existing themes keep their original appearance. */
+@font-face{font-family:'Space Grotesk';src:url('assets/fonts/space-grotesk.ttf') format('truetype');font-style:normal;font-weight:300 700;font-display:swap}
+@font-face{font-family:'IM FELL English';src:url('assets/fonts/im-fell-english.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:'IM FELL English';src:url('assets/fonts/im-fell-english-italic.ttf') format('truetype');font-style:italic;font-weight:400;font-display:swap}
+
+@media screen{
+ /* Aurora: dark architectural surfaces, precise typography, and quiet spectral light. */
+ :root[data-theme=aurora]{
+  --bg:#080e1d;--side:#0c1528;--card:#111e34;--text:#e4edff;--muted:#a4b5d2;
+  --border:#344662;--primary:#96efdf;--hover:#1c304a;
+  --board:#0d1b30;--chalk:#e4edff;--line:#38516c;--frame:#243953;color-scheme:dark;
+ }
+ [data-theme=aurora] body{
+  font-family:'Space Grotesk',system-ui,sans-serif;
+  background-color:var(--bg);
+  background-image:radial-gradient(ellipse at 88% 5%,#7958bf30,transparent 48%),radial-gradient(ellipse at 18% 92%,#22b5b119,transparent 52%),linear-gradient(#8cb9df06 1px,transparent 1px),linear-gradient(90deg,#8cb9df06 1px,transparent 1px);
+  background-size:auto,auto,56px 56px,56px 56px;
+ }
+ [data-theme=aurora] ::selection{background:#96efdf;color:#08151d}
+ [data-theme=aurora] :is(button,input,select,textarea){font-family:inherit}
+ [data-theme=aurora] :is(button,input,select){border-radius:9px}
+ [data-theme=aurora] :is(button,.schedule-link){transition:background-color .18s,border-color .18s,box-shadow .18s}
+ [data-theme=aurora] :is(button,.schedule-link):hover{border-color:#709ca9;box-shadow:0 0 18px #86dedb0a}
+ [data-theme=aurora] :is(.primary,button[aria-pressed=true]){background:linear-gradient(115deg,#a7f1d5,#86cce9);color:#0b1a2c;border-color:#b3f5e5;box-shadow:0 2px 12px #78decd18}
+ [data-theme=aurora] .primary:hover{background:linear-gradient(115deg,#baf8e3,#a3e0f5)}
+ [data-theme=aurora] :is(input,textarea)::placeholder{color:#8b9ab7;opacity:1}
+ [data-theme=aurora] aside{background:linear-gradient(165deg,#13233b,#0b1427 68%);border-right-color:#49667a;box-shadow:8px 0 38px #0003}
+ [data-theme=aurora] aside header{border-bottom-color:#96efdf24}
+ [data-theme=aurora] aside footer{background:#08111f60}
+ [data-theme=aurora] .brand{font:500 1.5rem/1.4 'Space Grotesk',sans-serif;letter-spacing:-.045em}
+ [data-theme=aurora] .brand-icon{font-size:0}
+ [data-theme=aurora] .brand-icon::before{content:'✧';font-size:1.7rem;font-weight:400;color:#b9acff}
+ [data-theme=aurora] .topbar{background:#0c1629f5;border-bottom-color:#96efdf25}
+ [data-theme=aurora] #status{font-size:.8rem;letter-spacing:.025em}
+ [data-theme=aurora] #editor{
+  background:radial-gradient(ellipse at 100% 0%,#62539714,transparent 50%),linear-gradient(145deg,#14223aee,#0e192cf5);
+  border:1px solid #435975;border-top-color:#95d9d088;border-radius:18px;
+  box-shadow:0 24px 60px #0004,inset 0 1px 0 #b8fff310;
+ }
+ [data-theme=aurora] #title{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:clamp(1.8rem,3.1vw,2.7rem);letter-spacing:-.055em;line-height:1.25;color:#f2f5ff}
+ [data-theme=aurora] #body{font-size:1.06rem;line-height:1.9;color:#d6e1f5;letter-spacing:.005em}
+ [data-theme=aurora] :is(.metadata label,#library-tools summary){letter-spacing:.04em}
+ [data-theme=aurora] .toolbar{padding-block:12px;border-top:1px solid #7a9abd22;border-bottom:1px solid #7a9abd22}
+ [data-theme=aurora] .toolbar button{background:#14273d}
+ [data-theme=aurora] #entries button{background:#11203899;border-color:#314961;box-shadow:inset 0 1px 0 #ffffff05}
+ [data-theme=aurora] #entries button[aria-current=true]{background:linear-gradient(100deg,#203e50,#17243d);border-left-color:#96efdf;box-shadow:inset 0 0 25px #8ddacc05}
+ [data-theme=aurora] #entries strong{font-weight:500;letter-spacing:-.02em}
+ [data-theme=aurora] :is(#account,dialog){background:linear-gradient(145deg,#162440f5,#0c172cf5);border:1px solid #496782;border-radius:18px;box-shadow:0 26px 100px #0005,inset 0 1px 0 #befce72b}
+ [data-theme=aurora] #account{padding:32px;width:min(480px,calc(100% - 28px));max-height:calc(100dvh - 28px)}
+ [data-theme=aurora] #account h1{font-weight:500;letter-spacing:-.06em;color:var(--primary);font-size:2.2rem;margin-top:0}
+ [data-theme=aurora] #account h2{font-weight:400;letter-spacing:-.03em}
+ [data-theme=aurora] #notice{background:#182940;border-color:#96efdf}
+ [data-theme=aurora] .schedule{font-family:'Space Grotesk',sans-serif;border-width:1px;border-color:#66839a;border-radius:16px;background:radial-gradient(ellipse at 80% 0%,#9170d020,transparent 65%),var(--board);box-shadow:0 20px 55px #0004,inset 0 0 0 5px #112c4055}
+ [data-theme=aurora] .board-title h2{font-weight:400;letter-spacing:-.05em}
+ [data-theme=aurora] .doodle{color:#9de8df}
+ [data-theme=aurora] :is(.board-number,.lesson small,.mobile-time){font-family:'Space Grotesk',sans-serif;opacity:1;color:#a9bbd9}
+ [data-theme=aurora] .weekday small{color:#a3f2de}
+ [data-theme=aurora] .today{background:#94dddf0a}
+
+ /* Parchment: ink, hand-set type, paper fibres, and the worn edges of a bound journal. */
+ :root[data-theme=parchment]{
+  --bg:#d8be95;--side:#d9bc90;--card:#f2e4c5;--text:#3b2b20;--muted:#725b40;
+  --border:#ac8b5f;--primary:#803d30;--hover:#e4cca2;
+  --board:#f1e2c1;--chalk:#3b2b20;--line:#b39a70;--frame:#79553a;color-scheme:light;
+ }
+ [data-theme=parchment] body{
+  font-family:Georgia,'Times New Roman',serif;
+  background-color:var(--bg);
+  background-image:url('assets/paper-grain.svg'),radial-gradient(ellipse at 10% 12%,#f8e9ca88,transparent 50%),radial-gradient(ellipse at 92% 88%,#7549223b,transparent 58%),repeating-linear-gradient(92deg,#69422105 0 1px,transparent 1px 5px);
+ }
+ [data-theme=parchment] ::selection{background:#b97841;color:#fff9e8}
+ [data-theme=parchment] :is(button,input,select,textarea){font-family:inherit}
+ [data-theme=parchment] :is(button,input,select){border-radius:3px}
+ [data-theme=parchment] :is(button,.schedule-link){background-image:url('assets/paper-grain.svg');box-shadow:inset 0 1px 0 #fff9e566,0 1px 1px #4a2b1412}
+ [data-theme=parchment] :is(.primary,button[aria-pressed=true]){background-color:#803d30;background-image:url('assets/paper-grain.svg');border-color:#663126;color:#fff3d9;box-shadow:inset 0 1px 0 #fbd99c30,0 2px 4px #4a2b1422}
+ [data-theme=parchment] .primary:hover{background-color:#6e3025}
+ [data-theme=parchment] :is(input,textarea)::placeholder{color:#7f694e;opacity:1}
+ [data-theme=parchment] aside{background:url('assets/paper-grain.svg'),linear-gradient(90deg,#c3a070,#e2c79d 15%,#d6b98c 93%,#b78f5f);border-right:3px double #8f6b45;box-shadow:5px 0 14px #57391e18}
+ [data-theme=parchment] aside header{border-bottom:3px double #a38357}
+ [data-theme=parchment] aside footer{border-top:3px double #a38357}
+ [data-theme=parchment] .brand{font:400 1.8rem/1.3 'IM FELL English',Georgia,serif;color:#633d28}
+ [data-theme=parchment] .brand-icon{font-size:0}
+ [data-theme=parchment] .brand-icon::before{content:'❦';font-size:1.65rem;color:#803d30}
+ [data-theme=parchment] .topbar{background:url('assets/paper-grain.svg'),#e6cfa8;border-bottom:3px double #ae895b}
+ [data-theme=parchment] #editor{
+  background-color:var(--card);
+  background-image:url('assets/paper-grain.svg'),radial-gradient(ellipse at 0% 0%,#9f6d3030,transparent 45%),radial-gradient(ellipse at 100% 100%,#9c662d29,transparent 50%),linear-gradient(90deg,#b9904a18,transparent 5%,transparent 95%,#b9904a20);
+  border:1px solid #a58557;border-radius:3px 10px 5px 2px;
+  box-shadow:0 14px 30px #51341926,3px 3px 0 #d6be91,4px 4px 0 #a9895e,inset 0 0 40px #a8792920;
+ }
+ [data-theme=parchment] #title{font:400 clamp(2rem,3.6vw,3.15rem)/1.25 'IM FELL English',Georgia,serif;letter-spacing:-.025em;color:#4f3021}
+ [data-theme=parchment] #body{font:400 1.28rem/1.85 'IM FELL English',Georgia,serif;color:#422d1e}
+ [data-theme=parchment] .metadata{padding-bottom:14px;border-bottom:3px double #b698674d}
+ [data-theme=parchment] .toolbar{border-bottom:1px solid #b6986770;padding-bottom:12px}
+ [data-theme=parchment] .toolbar .muted{font-style:italic}
+ [data-theme=parchment] #editor footer{border-top:3px double #b6986780}
+ [data-theme=parchment] #entries button{background:url('assets/paper-grain.svg'),#f0debb;border-color:#b29266;border-radius:2px 6px 3px 2px}
+ [data-theme=parchment] #entries button[aria-current=true]{background-color:#faeccb;border-left-color:#803d30;box-shadow:2px 3px 6px #63452216}
+ [data-theme=parchment] #entries strong{font:400 1.18rem/1.3 'IM FELL English',Georgia,serif}
+ [data-theme=parchment] :is(#account,dialog){background:url('assets/paper-grain.svg'),radial-gradient(ellipse at 100% 0%,#ab77342b,transparent 65%),#f1e2c1;border:1px solid #a78755;border-radius:3px;box-shadow:0 18px 60px #57391e30,inset 0 0 40px #b4853022}
+ [data-theme=parchment] #account{padding:32px;width:min(480px,calc(100% - 28px));max-height:calc(100dvh - 28px)}
+ [data-theme=parchment] #account h1{font:400 2.8rem/1.2 'IM FELL English',Georgia,serif;color:#633d28;margin-top:0}
+ [data-theme=parchment] :is(#account h2,#empty h1,dialog h2){font-family:'IM FELL English',Georgia,serif;font-weight:400}
+ [data-theme=parchment] #notice{background:url('assets/paper-grain.svg'),#e5c99c}
+ [data-theme=parchment] .schedule{font-family:'IM FELL English',Georgia,serif;border:8px double #79553a;background:url('assets/paper-grain.svg'),radial-gradient(ellipse at 0% 100%,#9c662d29,transparent 55%),var(--board);box-shadow:0 10px 28px #51341924,inset 0 0 40px #a8792920}
+ [data-theme=parchment] .board-title h2{letter-spacing:-.025em}
+ [data-theme=parchment] .doodle{color:#803d30}
+ [data-theme=parchment] :is(.board-number,.lesson small,.mobile-time){font-family:Georgia,serif;opacity:1;color:#725b40}
+ [data-theme=parchment] .lesson strong{font-size:1.15rem}
+ [data-theme=parchment] .lesson+.lesson{border-top-color:#9f81534d}
+ [data-theme=parchment] .weekday small{color:#803d30}
+ [data-theme=parchment] .today{background:#a46d2510}
+}
+@media screen and (max-width:768px){
+ [data-theme=aurora] #editor{border-radius:12px}
+ [data-theme=parchment] #editor{width:calc(100% - 26px);margin-inline:auto}
+ [data-theme=parchment] #body{font-size:1.2rem}
+ [data-theme=aurora] #account,[data-theme=parchment] #account{padding:24px}
+}
+@media(prefers-reduced-motion:reduce){[data-theme=aurora] :is(button,.schedule-link){transition:none}}
