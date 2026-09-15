@@ -99,15 +99,16 @@ $('decrypt-form').onsubmit=async event=>{
 $('cancel-import').onclick=()=>{incoming=null;$('merge').close();};
 $('apply-import').onclick=()=>{if(!incoming)return;entries=C.merge(entries,incoming,$('merge-choice').value);incoming=null;$('merge').close();persist();$('view').value='entries';load(entries.find(e=>!e.deletedAt)?.id||null);};
 $('theme').onchange=()=>{document.documentElement.dataset.theme=$('theme').value;try{localStorage.setItem('mydiary_theme',$('theme').value);}catch{}};
+$('library-tools').open=!matchMedia('(max-width:768px)').matches;
 $('menu').onclick=()=>setMenu(true);$('close-menu').onclick=$('backdrop').onclick=()=>setMenu(false);
-matchMedia('(max-width:768px)').addEventListener('change',()=>{document.querySelector('main').inert=false;setMenu(false);});
+matchMedia('(max-width:768px)').addEventListener('change',()=>{$('library-tools').open=!matchMedia('(max-width:768px)').matches;document.querySelector('main').inert=false;setMenu(false);});
 function insert(text,start=$('body').selectionStart,end=$('body').selectionEnd){$('body').focus();$('body').setRangeText(text,start,end,'select');save();}
 for(const btn of document.querySelectorAll('[data-format]'))btn.onclick=()=>{const b=$('body'),start=b.selectionStart,end=b.selectionEnd,selection=b.value.slice(start,end),kind=btn.dataset.format;
  if(kind==='bold'||kind==='italic'){const mark=kind==='bold'?'**':'*';insert(mark+(selection||'text')+mark);}
  else{const a=b.value.lastIndexOf('\n',start-1)+1;let z=b.value.indexOf('\n',end);if(z<0)z=b.value.length;insert(b.value.slice(a,z).split('\n').map((line,i)=>(kind==='bullet'?'- ':`${i+1}. `)+line).join('\n'),a,z);}};
 $('prompt').onclick=()=>{const b=$('body');insert(`${b.value?'\n\n':''}Prompt: ${prompts[Math.floor(Math.random()*prompts.length)]}\n\n`,b.value.length,b.value.length);};
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save();}if(e.key==='Escape'&&$('sidebar').classList.contains('open'))setMenu(false);
- if(e.key==='Tab'&&$('sidebar').classList.contains('open')&&matchMedia('(max-width:768px)').matches){const items=[...$('sidebar').querySelectorAll('a[href],button,input,select')].filter(x=>!x.hidden&&!x.disabled&&x.getClientRects().length),first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+ if(e.key==='Tab'&&$('sidebar').classList.contains('open')&&matchMedia('(max-width:768px)').matches){const items=[...$('sidebar').querySelectorAll('a[href],button,input,select,summary')].filter(x=>!x.hidden&&!x.disabled&&x.getClientRects().length),first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 window.addEventListener('storage',e=>{if(cloudMode)return;if(e.key!==KEY&&e.key!==null)return;blocked=true;$('status').textContent='Journal changed in another tab';notice('Another tab changed storage. Export this session, reload, and import the backup to merge entries.');});
 if(!cloudMode)try{baseline=localStorage.getItem(KEY);entries=baseline?C.validate(JSON.parse(baseline)):[];}catch(e){blocked=true;notice('Existing data could not be loaded and will not be overwritten. '+e.message);$('status').textContent='Storage unavailable or unreadable';if(baseline){const btn=document.createElement('button');btn.textContent='Download original data for recovery';btn.onclick=()=>download(baseline,'mydiary_recovery.json','application/json');$('notice').append(document.createElement('br'),btn);}}
@@ -124,7 +125,7 @@ function clearJournal(){
  $('mood').value='Neutral';$('filter').value='all';$('view').value='entries';$('merge').close();$('decrypt-backup').close();notice('');load(null);
 }
 function showJournal(loaded){
- entries=loaded;ready=true;dirty=false;document.body.classList.remove('locked');$('account').hidden=true;
+ entries=loaded;ready=true;dirty=false;setMenu(false);document.body.classList.remove('locked');$('account').hidden=true;
  $('account-email').hidden=false;$('sign-out').hidden=false;$('lock-vault').hidden=false;
  $('storage-help').textContent='Encrypted in this browser before saving.';$('export').textContent='Export encrypted backup';
  $('status').textContent='Encrypted vault unlocked';

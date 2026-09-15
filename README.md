@@ -27,3 +27,5 @@ The private Storage bucket is reserved for future attachments. School schedules 
 ## GitHub Pages
 
 Publish the `main` branch from the repository root. `.nojekyll` ensures static files are served directly. Journal backups and local backup folders must never be committed.
+
+On phones, tap **☰ Entries** to browse earlier writing. Theme, schedules, account actions, and exports are under **Settings & backups** in the library.

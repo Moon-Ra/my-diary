@@ -35,17 +35,17 @@
 <button id="backdrop" aria-label="Close library" hidden></button>
 <aside id="sidebar">
  <header><div class="brand">📖 My Diary <button id="close-menu" class="mobile" aria-label="Close library">✕</button></div>
- <label>Theme<select id="theme"><option value="warm">Warm</option><option value="cool">Cool</option><option value="dark">Dark</option></select></label>
- <a class="schedule-link" href="schedules.html" target="_blank" rel="noopener">School schedules ↗</a>
- <small id="account-email" hidden></small><button id="lock-vault" hidden>Lock diary</button><button id="sign-out" hidden>Sign out</button>
  <button id="new" class="primary">+ New entry</button>
  <label>Search<input id="search" type="search" placeholder="Titles, writing, and tags"></label>
  <div class="row"><label>Mood<select id="filter"><option value="all">All moods</option><option>Happy</option><option>Sad</option><option>Neutral</option><option>Excited</option><option>Anxious</option></select></label><label>Library<select id="view"><option value="entries">Entries</option><option value="trash">Trash</option></select></label></div></header>
  <p id="count" class="muted"></p><ul id="entries"></ul>
- <footer><div class="row"><button id="export">Export JSON</button><button id="import">Import / Restore</button></div><button id="markdown">Export Markdown (unencrypted)</button><input id="file" type="file" accept=".json,application/json" hidden><small id="backup">No backup exported yet</small><small><span id="storage-help">Saved in this browser.</span> Export a backup to keep a portable copy.</small></footer>
+ <footer><details id="library-tools" open><summary>Settings &amp; backups</summary><div class="library-tools-content"> <label>Theme<select id="theme"><option value="warm">Warm</option><option value="cool">Cool</option><option value="dark">Dark</option></select></label>
+ <a class="schedule-link" href="schedules.html" target="_blank" rel="noopener">School schedules ↗</a>
+ <small id="account-email" hidden></small><button id="lock-vault" hidden>Lock diary</button><button id="sign-out" hidden>Sign out</button>
+<div class="row"><button id="export">Export JSON</button><button id="import">Import / Restore</button></div><button id="markdown">Export Markdown (unencrypted)</button><input id="file" type="file" accept=".json,application/json" hidden><small id="backup">No backup exported yet</small><small><span id="storage-help">Saved in this browser.</span> Export a backup to keep a portable copy.</small></div></details></footer>
 </aside>
 <main>
- <div class="topbar"><button id="menu" class="mobile" aria-controls="sidebar" aria-expanded="false" aria-label="Open library">☰</button><span id="status" role="status" aria-live="polite">Ready</span><button id="save">Save <kbd>Ctrl/⌘ S</kbd></button></div>
+ <div class="topbar"><button id="menu" class="mobile" aria-controls="sidebar" aria-expanded="false" aria-label="Browse journal entries">☰ Entries</button><span id="status" role="status" aria-live="polite">Ready</span><button id="save">Save <kbd>Ctrl/⌘ S</kbd></button></div>
  <div id="notice" role="alert" hidden></div>
  <section id="empty" hidden><h1>Your quiet place</h1><p>Create an entry to start writing.</p><button id="empty-new" class="primary">New entry</button></section>
  <section id="editor">

@@ -81,7 +81,28 @@ const entry=(id,content,deletedAt=null)=>({id,title:'Private '+id,content,date:'
   await page.locator('#sign-out').click();await page.locator('#auth-form').waitFor({state:'visible'});
   assert.equal(await page.locator('#body').inputValue(),'');assert.equal(await page.evaluate(()=>vault),null);
   await page.setViewportSize({width:390,height:844});await signIn(page);await unlock(page,pass2);
+  await page.locator('#menu').click();
+  const library=await page.locator('#entries').boundingBox();console.log('Mobile library dimensions:',library);
+  assert.ok(library.height>=160,'Mobile library must have enough room to browse entries');
+  await page.locator('#entries button').filter({hasText:'Private old'}).click();
+  assert.equal(await page.locator('#body').inputValue(),'Updated private writing');
+  assert.equal(await page.locator('#menu').getAttribute('aria-expanded'),'false');
+  for(const size of [{width:320,height:568},{width:667,height:375}]){
+   await page.setViewportSize(size);await page.locator('#menu').click();
+   assert.ok((await page.locator('#entries').boundingBox()).height>=160);
+   await page.locator('#entries button').filter({hasText:'Private trash'}).click();
+   assert.equal(await page.locator('#body').inputValue(),'Trashed writing');
+  }
+  // Settings and account actions stay reachable on a short phone screen.
+  await page.setViewportSize({width:320,height:568});await page.locator('#menu').click();
+  await page.locator('#library-tools summary').click();await page.locator('#lock-vault').click();
+  await page.locator('#vault-secret').waitFor({state:'visible'});await unlock(page,pass2);
+  assert.equal(await page.locator('#menu').getAttribute('aria-expanded'),'false');
+  await page.locator('#menu').click();await page.locator('#sign-out').click();
+  await page.locator('#auth-form').waitFor({state:'visible'});await signIn(page);
+  assert.equal(await page.locator('#vault-secret').isVisible(),true);
+  assert.equal(await page.evaluate(()=>vault),null);
   assert.deepEqual(errors,[]);
-  console.log('PASS browser: migration, recovery-key confirmation, encrypted save/export/import, lock/unlock, incorrect passphrase, passphrase recovery, cross-tab conflict, Trash, sign-out cleanup, mobile unlock, and no secrets in API payloads.');
+  console.log('PASS browser: migration, recovery-key confirmation, encrypted save/export/import, lock/unlock, incorrect passphrase, passphrase recovery, cross-tab conflict, Trash, sign-out cleanup, mobile entry browsing at three sizes, reachable mobile settings, required vault passphrase after sign-out, and no secrets in API payloads.');
  }finally{await browser?.close();await new Promise(resolve=>server?server.close(resolve):resolve());}
 })().catch(e=>{console.error(e);process.exitCode=1;});
