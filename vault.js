@@ -79,14 +79,14 @@
   }finally{raw.fill(0);}
  }
  async function encrypt(vault,entries){
-  const clean=root.DiaryCore.validate(entries),raw=encoder.encode(JSON.stringify({version:1,entries:clean}));
+  const document=Array.isArray(entries)?{version:1,entries:root.DiaryCore.validate(entries)}:root.DiaryCore.journal(entries),raw=encoder.encode(JSON.stringify(document));
   try{return {format:'my-diary-encrypted',version:VERSION,owner:vault.owner,keyring:vault.keyring,
    ciphertext:await seal(vault.key,raw,vault.owner,'journal')};}finally{raw.fill(0);}
  }
  async function decrypt(vault,payload){
   validate(payload);if(vault.owner!==payload.owner)throw Error('Vault owner mismatch.');
   let raw;
-  try{raw=await open(vault.key,payload.ciphertext,payload.owner,'journal');return root.DiaryCore.validate(JSON.parse(decoder.decode(raw)));}
+  try{raw=await open(vault.key,payload.ciphertext,payload.owner,'journal');const document=JSON.parse(decoder.decode(raw));return document.version===2?root.DiaryCore.journal(document):root.DiaryCore.validate(document);}
   catch{throw Error('Could not decrypt the journal. No data has been changed.');}
   finally{raw?.fill(0);}
  }

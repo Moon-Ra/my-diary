@@ -55,7 +55,7 @@ const entry=(id,content,deletedAt=null)=>({id,title:'Private '+id,content,date:'
   await page.locator('#body').fill('Updated private writing');await saved(page);
   const downloadPromise=page.waitForEvent('download');await page.locator('#export').click();const download=await downloadPromise;
   const backup=JSON.parse(await fs.readFile(await download.path(),'utf8'));
-  const decoded=await V.decrypt(await V.unlock(backup,pass1),backup);assert.equal(decoded.length,2);assert.ok(decoded.some(e=>e.deletedAt));
+  const decoded=DiaryCore.journal(await V.decrypt(await V.unlock(backup,pass1),backup)).entries;assert.equal(decoded.length,2);assert.ok(decoded.some(e=>e.deletedAt));
   await page.locator('#lock-vault').click();await page.locator('#vault-secret').waitFor({state:'visible'});
   assert.equal(await page.locator('#body').inputValue(),'');assert.ok(!(await page.locator('body').innerText()).includes('Original private writing'));
   await page.locator('#vault-secret').fill('incorrect passphrase');await page.locator('#vault-submit').click();await page.waitForFunction(()=>document.getElementById('vault-message').textContent.includes('Could not unlock'));
@@ -63,19 +63,46 @@ const entry=(id,content,deletedAt=null)=>({id,title:'Private '+id,content,date:'
   await page.locator('#lock-vault').click();await page.locator('#vault-use-recovery').click();
   await page.locator('#vault-secret').fill(recovery);await page.locator('#vault-new').fill(pass2);await page.locator('#vault-confirm').fill(pass2);await page.locator('#vault-submit').click();await unlocked(page);
   await assert.rejects(()=>V.unlock(payload,pass1),/Could not unlock/);
-  assert.equal((await V.decrypt(await V.unlock(payload,pass2),payload)).length,2);
+  assert.equal(DiaryCore.journal(await V.decrypt(await V.unlock(payload,pass2),payload)).entries.length,2);
+  // Due reminders open after unlocking, stay encrypted, and support completion/rescheduling.
+  await page.locator('#reminders-open').click();
+  await page.locator('#reminder-title').fill('Private reminder appointment');
+  await page.locator('#reminder-date').fill('2020-01-01');
+  await page.locator('#reminder-submit').click();await saved(page);
+  assert.ok(!wire.at(-1).includes('Private reminder appointment'));
+  assert.equal(DiaryCore.journal(await V.decrypt(await V.unlock(payload,pass2),payload)).reminders.length,1);
+  await page.locator('#reminders-close').click();await page.locator('#lock-vault').click();
+  assert.equal(await page.locator('#reminder-list').textContent(),'');
+  await unlock(page,pass2);await page.locator('#reminders-dialog').waitFor({state:'visible'});
+  assert.ok((await page.locator('#reminder-list').innerText()).includes('Overdue'));
+  await page.getByRole('button',{name:'Edit / reschedule',exact:true}).click();
+  await page.locator('#reminder-date').fill('2099-01-01');await page.locator('#reminder-submit').click();await saved(page);
+  await page.locator('#reminders-close').click();await page.locator('#lock-vault').click();await unlock(page,pass2);
+  assert.equal(await page.locator('#reminders-dialog').isVisible(),false);
+  await page.locator('#reminders-open').click();await page.getByRole('button',{name:'Mark done',exact:true}).click();await saved(page);
+  assert.equal(DiaryCore.journal(await V.decrypt(await V.unlock(payload,pass2),payload)).reminders[0].done,true);
+  await page.locator('#reminders-close').click();
+  const reminderBackupDownload=page.waitForEvent('download');await page.locator('#export').click();
+  const reminderBackup=await fs.readFile(await (await reminderBackupDownload).path());
+  await page.locator('#reminders-open').click();await page.getByRole('button',{name:'Reopen',exact:true}).click();await saved(page);
+  await page.locator('#reminders-close').click();
+  await page.locator('#file').setInputFiles({name:'reminders.json',mimeType:'application/json',buffer:reminderBackup});
+  await page.locator('#backup-secret').fill(pass2);await page.locator('#decrypt-submit').click();await page.locator('#merge').waitFor({state:'visible'});
+  assert.ok((await page.locator('#merge-summary').innerText()).includes('1 reminders (1 matching IDs)'));
+  await page.locator('#merge-choice').selectOption('import');await page.locator('#apply-import').click();await saved(page);
+  assert.equal(DiaryCore.journal(await V.decrypt(await V.unlock(payload,pass2),payload)).reminders[0].done,true);
   // A second tab must not overwrite a newer encrypted save.
   const other=await newPage();await signIn(other);await unlock(other,pass2);
   await page.locator('#body').fill('Newer first-tab writing');await saved(page);
   await other.locator('#body').fill('Conflicting second-tab writing');await other.waitForFunction(()=>document.getElementById('notice').textContent.includes('DIARY_CONFLICT'));
-  assert.equal((await V.decrypt(await V.unlock(payload,pass2),payload)).find(e=>e.id==='old').content,'Newer first-tab writing');await other.close();
+  assert.equal(DiaryCore.journal(await V.decrypt(await V.unlock(payload,pass2),payload)).entries.find(e=>e.id==='old').content,'Newer first-tab writing');await other.close();
   // An old encrypted backup uses its original passphrase, then is saved under the current vault.
   await page.locator('#file').setInputFiles({name:'encrypted.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))});
   await page.locator('#backup-secret').fill(pass1);await page.locator('#decrypt-submit').click();await page.locator('#merge').waitFor({state:'visible'});
   await page.locator('#merge-choice').selectOption('import');await page.locator('#apply-import').click();await saved(page);
   assert.equal(await page.locator('#body').inputValue(),'Updated private writing');
   await page.locator('#view').selectOption('trash');assert.equal(await page.locator('#body').inputValue(),'Trashed writing');await page.locator('#restore').click();await saved(page);
-  assert.equal((await V.decrypt(await V.unlock(payload,pass2),payload)).filter(e=>e.deletedAt).length,0);
+  assert.equal(DiaryCore.journal(await V.decrypt(await V.unlock(payload,pass2),payload)).entries.filter(e=>e.deletedAt).length,0);
   assert.ok(!wire.join('').includes('private writing'));assert.ok(!wire.join('').includes(pass1));assert.ok(!wire.join('').includes(pass2));assert.ok(!wire.join('').includes(recovery));assert.ok(!wire.join('').includes('secret-tag'));
   assert.ok(!(await page.evaluate(()=>JSON.stringify(localStorage))).includes('private writing'));
   await page.locator('#sign-out').click();await page.locator('#auth-form').waitFor({state:'visible'});
@@ -93,6 +120,17 @@ const entry=(id,content,deletedAt=null)=>({id,title:'Private '+id,content,date:'
    await page.locator('#entries button').filter({hasText:'Private trash'}).click();
    assert.equal(await page.locator('#body').inputValue(),'Trashed writing');
   }
+  // The reminder form fits narrow screens and remains usable with the rustic theme.
+  await page.setViewportSize({width:320,height:568});
+  await page.evaluate(()=>document.documentElement.dataset.theme='parchment');
+  await page.locator('#reminders-open').click();
+  const reminderBox=await page.locator('#reminders-dialog').boundingBox();
+  assert.ok(reminderBox.x>=0&&reminderBox.x+reminderBox.width<=320);
+  await page.locator('#reminder-title').fill('Mobile reminder');
+  await page.locator('#reminder-date').fill('2099-02-01');await page.locator('#reminder-submit').click();await saved(page);
+  assert.equal(await page.locator('#reminder-list li').count(),2);
+  await page.screenshot({path:'/tmp/diary-reminders-mobile.png'});
+  await page.locator('#reminders-close').click();
   // Settings and account actions stay reachable on a short phone screen.
   await page.setViewportSize({width:320,height:568});await page.locator('#menu').click();
   await page.locator('#library-tools summary').click();await page.locator('#lock-vault').click();
@@ -103,6 +141,6 @@ const entry=(id,content,deletedAt=null)=>({id,title:'Private '+id,content,date:'
   assert.equal(await page.locator('#vault-secret').isVisible(),true);
   assert.equal(await page.evaluate(()=>vault),null);
   assert.deepEqual(errors,[]);
-  console.log('PASS browser: migration, recovery-key confirmation, encrypted save/export/import, lock/unlock, incorrect passphrase, passphrase recovery, cross-tab conflict, Trash, sign-out cleanup, mobile entry browsing at three sizes, reachable mobile settings, required vault passphrase after sign-out, and no secrets in API payloads.');
+  console.log('PASS browser: encrypted reminders, due popup, rescheduling, completion, backup restore, mobile reminders, migration, recovery-key confirmation, encrypted save/export/import, lock/unlock, incorrect passphrase, passphrase recovery, cross-tab conflict, Trash, sign-out cleanup, mobile entry browsing at three sizes, reachable mobile settings, required vault passphrase after sign-out, and no secrets in API payloads.');
  }finally{await browser?.close();await new Promise(resolve=>server?server.close(resolve):resolve());}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -38,6 +38,19 @@
   }
   return [...map.values()];
  }
- const api = {today,dayNumber,validate,streak,merge};
+ function journal(data) {
+  if (data?.version !== 2) return {version:2,entries:validate(data),reminders:[]};
+  const entries=validate(data.entries), ids=new Set();
+  if (!Array.isArray(data.reminders)) throw Error('Invalid reminders.');
+  const reminders=data.reminders.map(r=>{
+   if (!r || typeof r.id!=='string' || !r.id || ids.has(r.id) || typeof r.title!=='string' || !r.title.trim() || r.title.length>300 || typeof r.done!=='boolean') throw Error('Invalid reminder.');
+   ids.add(r.id);dayNumber(r.date);
+   if (typeof r.updatedAt!=='string' || !Number.isFinite(Date.parse(r.updatedAt))) throw Error('Invalid reminder timestamp.');
+   return {id:r.id,title:r.title,date:r.date,done:r.done,updatedAt:r.updatedAt};
+  });
+  return {version:2,entries,reminders};
+ }
+ function due(reminders,date=today()){dayNumber(date);return reminders.filter(r=>!r.done&&r.date<=date).sort((a,b)=>a.date.localeCompare(b.date));}
+ const api = {today,dayNumber,validate,streak,merge,journal,due};
  if (typeof module !== 'undefined') module.exports=api; else root.DiaryCore=api;
 })(globalThis);

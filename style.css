@@ -12,3 +12,5 @@
 
 aside{overflow-y:auto}aside header,aside footer{flex-shrink:0}#entries{min-height:180px}#library-tools summary{cursor:pointer;font-weight:600}.library-tools-content{display:grid;gap:12px;padding-top:14px}.topbar{position:sticky;top:0;z-index:1;background:var(--bg)}#menu{white-space:nowrap}
 @media(max-width:768px){aside header,aside footer{padding:14px}#entries{min-height:180px}#count{margin:8px 14px}}
+
+#reminders-dialog{width:min(560px,calc(100% - 24px));max-width:560px;max-height:85dvh;overflow:auto}#reminders-heading{flex:1;margin:0}#reminder-list{list-style:none;padding:0;display:grid;gap:14px}#reminder-list li{display:grid;gap:8px;padding:12px;border:1px solid var(--border);border-radius:6px;overflow-wrap:anywhere}#reminder-form{display:grid;gap:12px;border-top:1px solid var(--border);padding-top:16px}.topbar{flex-wrap:wrap}#reminders-open{white-space:nowrap}@media(max-width:480px){#status{order:4;flex-basis:100%}.topbar{gap:8px}.topbar button{padding:8px}}

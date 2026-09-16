@@ -4,15 +4,16 @@ const config=window.DIARY_CONFIG||{}, cloudMode=Boolean(config.supabaseUrl||conf
 let cloud=null, client=null, accountId=null, ready=!cloudMode;
 let vault=null, vaultSnapshot=null, setupDraft=null, vaultMode=null, vaultBusy=false, encryptedImport=null;
 let accountEpoch=0;
+let reminders=[], reminderEdit=null, reminderDay=C.today();
 let entries=[], current=null, baseline=null, blocked=false, incoming=null, dirty=false;
 const prompts=['What made you smile today?','What challenged you today, and what helped?','What are you grateful for right now?','What small step could you take toward a goal?','What did you learn this week?','Write a letter to your past self.'];
-function notice(message){$('notice').textContent=message;$('notice').hidden=!message;}
+function notice(message){$('notice').textContent=message;$('notice').hidden=!message;$('reminder-notice').textContent=message;$('reminder-notice').hidden=!message;}
 function active(){return entries.find(e=>e.id===current);}
-function envelope(){return {version:1,exportedAt:new Date().toISOString(),entries};}
+function envelope(){return {version:2,exportedAt:new Date().toISOString(),entries,reminders};}
 function persist(){
  if(cloudMode){
   if(!ready||!cloud){return false;}
-  dirty=true;cloud.queue(entries);return true;
+  dirty=true;cloud.queue(envelope());return true;
  }
  try {
   if(blocked) throw Error('Storage has changed or could not be loaded. Export this session, then reload and import the backup to reconcile it.');
@@ -53,7 +54,7 @@ function create(){if(!ready)return;const firstEntry=!active();const e={id:crypto
 function download(content,name,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 async function exportJSON(){
  try{
-  const backup=cloudMode?await DiaryVault.encrypt(vault,entries):envelope();
+  const backup=cloudMode?await DiaryVault.encrypt(vault,envelope()):envelope();
   download(JSON.stringify(backup,null,2),`mydiary_${cloudMode?'encrypted_':''}backup_${C.today()}.json`,'application/json');
   const stamp=new Date().toISOString();try{localStorage.setItem('mydiary_last_export',stamp);}catch{}
   $('backup').textContent='Backup export requested '+new Date(stamp).toLocaleString();
@@ -71,8 +72,9 @@ $('export').onclick=exportJSON;
 $('markdown').onclick=()=>{if(!confirm('This Markdown file contains your unencrypted journal text. Export it?'))return;const text=entries.filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`# ${e.title||'Untitled entry'}\n\n${e.date} · ${e.mood}${e.tags.length?' · '+e.tags.join(', '):''}\n\n${e.content}\n`).join('\n---\n\n');download(text,`mydiary_${C.today()}.md`,'text/markdown;charset=utf-8');};
 $('import').onclick=()=>$('file').click();
 function previewImport(data){
- incoming=C.validate(data);const ids=new Set(entries.map(e=>e.id)),conflicts=incoming.filter(e=>ids.has(e.id)).length;
- $('merge-summary').textContent=`${incoming.length} entries: ${incoming.length-conflicts} new, ${conflicts} matching IDs. Backups include Trash.`;
+ incoming=C.journal(data);const ids=new Set(entries.map(e=>e.id)),conflicts=incoming.entries.filter(e=>ids.has(e.id)).length;
+ const reminderIds=new Set(reminders.map(r=>r.id)),reminderConflicts=incoming.reminders.filter(r=>reminderIds.has(r.id)).length;
+ $('merge-summary').textContent=`${incoming.entries.length} entries: ${incoming.entries.length-conflicts} new, ${conflicts} matching IDs. Backups include Trash and ${incoming.reminders.length} reminders (${reminderConflicts} matching IDs). The same merge choice applies to reminders.`;
  $('merge-choice').value='keep';$('merge').showModal();
 }
 $('file').onchange=async()=>{
@@ -97,7 +99,7 @@ $('decrypt-form').onsubmit=async event=>{
  finally{$('decrypt-submit').disabled=false;}
 };
 $('cancel-import').onclick=()=>{incoming=null;$('merge').close();};
-$('apply-import').onclick=()=>{if(!incoming)return;entries=C.merge(entries,incoming,$('merge-choice').value);incoming=null;$('merge').close();persist();$('view').value='entries';load(entries.find(e=>!e.deletedAt)?.id||null);};
+$('apply-import').onclick=()=>{if(!incoming)return;entries=C.merge(entries,incoming.entries,$('merge-choice').value);reminders=C.merge(reminders,incoming.reminders,$('merge-choice').value);renderReminders();incoming=null;$('merge').close();persist();$('view').value='entries';load(entries.find(e=>!e.deletedAt)?.id||null);};
 $('library-tools').open=!matchMedia('(max-width:768px)').matches;
 $('menu').onclick=()=>setMenu(true);$('close-menu').onclick=$('backdrop').onclick=()=>setMenu(false);
 matchMedia('(max-width:768px)').addEventListener('change',()=>{$('library-tools').open=!matchMedia('(max-width:768px)').matches;document.querySelector('main').inert=false;setMenu(false);});
@@ -110,26 +112,28 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLower
  if(e.key==='Tab'&&$('sidebar').classList.contains('open')&&matchMedia('(max-width:768px)').matches){const items=[...$('sidebar').querySelectorAll('a[href],button,input,select,summary')].filter(x=>!x.hidden&&!x.disabled&&x.getClientRects().length),first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 window.addEventListener('storage',e=>{if(cloudMode)return;if(e.key!==KEY&&e.key!==null)return;blocked=true;$('status').textContent='Journal changed in another tab';notice('Another tab changed storage. Export this session, reload, and import the backup to merge entries.');});
-if(!cloudMode)try{baseline=localStorage.getItem(KEY);entries=baseline?C.validate(JSON.parse(baseline)):[];}catch(e){blocked=true;notice('Existing data could not be loaded and will not be overwritten. '+e.message);$('status').textContent='Storage unavailable or unreadable';if(baseline){const btn=document.createElement('button');btn.textContent='Download original data for recovery';btn.onclick=()=>download(baseline,'mydiary_recovery.json','application/json');$('notice').append(document.createElement('br'),btn);}}
+if(!cloudMode)try{baseline=localStorage.getItem(KEY);const loaded=baseline?C.journal(JSON.parse(baseline)):{entries:[],reminders:[]};entries=loaded.entries;reminders=loaded.reminders;}catch(e){blocked=true;notice('Existing data could not be loaded and will not be overwritten. '+e.message);$('status').textContent='Storage unavailable or unreadable';if(baseline){const btn=document.createElement('button');btn.textContent='Download original data for recovery';btn.onclick=()=>download(baseline,'mydiary_recovery.json','application/json');$('notice').append(document.createElement('br'),btn);}}
 try{const stamp=localStorage.getItem('mydiary_last_export');if(stamp)$('backup').textContent='Last export requested '+new Date(stamp).toLocaleString();}catch{}
 load([...entries].filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null);
 
 function lockAccount(message){
- ready=false;document.body.classList.add('locked');$('account').hidden=false;
+ ready=false;$('reminders-dialog').close();document.body.classList.add('locked');$('account').hidden=false;
  $('account-message').textContent=message;
 }
 function clearJournal(){
+ reminders=[];reminderEdit=null;$('reminders-dialog').close();$('reminder-form').reset();$('reminder-list').replaceChildren();
  entries=[];current=null;incoming=null;encryptedImport=null;vault=null;setupDraft=null;vaultSnapshot=null;
  for(const id of ['title','body','tags','date','search','vault-secret','vault-new','vault-confirm','recovery-key','recovery-check','backup-secret'])$(id).value='';
  $('mood').value='Neutral';$('filter').value='all';$('view').value='entries';$('merge').close();$('decrypt-backup').close();notice('');load(null);
 }
 function showJournal(loaded){
- entries=loaded;ready=true;dirty=false;setMenu(false);document.body.classList.remove('locked');$('account').hidden=true;
+ const journal=C.journal(loaded);entries=journal.entries;reminders=journal.reminders;ready=true;dirty=false;setMenu(false);document.body.classList.remove('locked');$('account').hidden=true;
  $('account-email').hidden=false;$('sign-out').hidden=false;$('lock-vault').hidden=false;
  $('storage-help').textContent='Encrypted in this browser before saving.';$('export').textContent='Export encrypted backup';
  $('status').textContent='Encrypted vault unlocked';
  load([...entries].filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null);
  window.DiaryPresentation?.reveal();
+ checkReminders();
 }
 function showVault(mode){
  vaultMode=mode;setupDraft=null;
@@ -296,3 +300,43 @@ if(cloudMode){
   }catch(error){lockAccount('Connection unavailable: '+error.message);}
  })();
 }
+
+function renderReminders(){
+ const due=C.due(reminders);
+ $('reminders-open').textContent=due.length?`Reminders (${due.length})`:'Reminders';
+ $('reminder-summary').textContent=due.length?`${due.length} due or overdue. Dates use this device’s local calendar.`:'No reminders due. Dates use this device’s local calendar.';
+ $('reminder-list').replaceChildren();
+ const sorted=[...reminders].sort((a,b)=>Number(a.done)-Number(b.done)||a.date.localeCompare(b.date));
+ for(const r of sorted){
+  const li=document.createElement('li'),title=document.createElement('strong'),meta=document.createElement('small'),actions=document.createElement('div');
+  title.textContent=r.title;meta.textContent=`${r.date} · ${r.done?'Done':r.date<C.today()?'Overdue':r.date===C.today()?'Due today':'Upcoming'}`;
+  actions.className='row';
+  function button(label,action){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{if(ready)action();};actions.append(b);}
+  button(r.done?'Reopen':'Mark done',()=>{r.done=!r.done;r.updatedAt=new Date().toISOString();persist();renderReminders();});
+  button('Edit / reschedule',()=>{reminderEdit=r.id;$('reminder-title').value=r.title;$('reminder-date').value=r.date;$('reminder-submit').textContent='Save changes';$('reminder-title').focus();});
+  li.append(title,meta,actions);$('reminder-list').append(li);
+ }
+ if(!sorted.length){const li=document.createElement('li');li.textContent='No reminders yet. Add one below.';$('reminder-list').append(li);}
+}
+function resetReminderForm(){reminderEdit=null;$('reminder-title').setCustomValidity('');$('reminder-form').reset();$('reminder-date').value=C.today();$('reminder-submit').textContent='Add reminder';}
+function openReminders(){if(!ready)return;setMenu(false);renderReminders();resetReminderForm();if(!$('reminders-dialog').open)$('reminders-dialog').showModal();}
+function checkReminders(){reminderDay=C.today();renderReminders();if(ready&&C.due(reminders).length)openReminders();}
+$('reminders-open').onclick=openReminders;
+$('reminders-close').onclick=()=>$('reminders-dialog').close();
+$('reminder-cancel').onclick=resetReminderForm;
+$('reminders-dialog').addEventListener('close',resetReminderForm);
+$('reminder-form').onsubmit=event=>{
+ event.preventDefault();if(!ready)return;
+ const title=$('reminder-title').value.trim(),date=$('reminder-date').value;
+ if(!title){$('reminder-title').setCustomValidity('Enter a reminder title.');$('reminder-title').reportValidity();return;}
+ try{C.dayNumber(date);}catch{return;}
+ const existing=reminders.find(r=>r.id===reminderEdit);
+ if(existing){existing.title=title;existing.date=date;existing.updatedAt=new Date().toISOString();}
+ else reminders.push({id:crypto.randomUUID(),title,date,done:false,updatedAt:new Date().toISOString()});
+ persist();resetReminderForm();renderReminders();
+};
+$('reminder-title').oninput=()=>$('reminder-title').setCustomValidity('');
+function checkReminderDay(){if(!ready||document.hidden)return;const day=C.today();if(day!==reminderDay){reminderDay=day;if(!document.querySelector('dialog[open]'))checkReminders();else renderReminders();}}
+setInterval(checkReminderDay,60000);
+document.addEventListener('visibilitychange',checkReminderDay);
+if(!cloudMode)checkReminders();

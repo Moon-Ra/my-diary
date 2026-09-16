@@ -33,3 +33,11 @@ On phones, tap **☰ Entries** to browse earlier writing. Theme, schedules, acco
 Themes: **Warm**, **Cool**, **Dark**, **Aurora · Futuristic**, and **Parchment · Rustic**. Choose a theme under Settings & backups; it is remembered by this browser and shared with School schedules. New themes use local font and texture assets in `assets/` (font licenses included). Keep `themes.js`, `themes.css`, and `assets/` with the site.
 
 The Parchment theme briefly unfurls like a scroll when selected or when the diary is unlocked, then reveals the writing. Ordinary edits and entry switching do not replay it. Typing or clicking the editor skips the effect; reduced-motion preferences show the page immediately.
+
+## Reminders
+
+Use **Reminders** in the top bar to add a title and calendar date. Due and overdue reminders open automatically after unlocking (or opening the local diary). Closing the popup keeps them pending; **Mark done** stops future alerts, **Reopen** makes them pending again, and **Edit / reschedule** changes the title or date. The app also checks for a new local calendar day while it stays open. There are no notifications outside the diary and no notification permission is needed.
+
+In cloud mode, reminder titles, dates, and completion state are encrypted with the journal and included in encrypted JSON backups. Import merges reminders by ID using the selected conflict policy. Markdown export includes journal entries only. Local mode stores reminders unencrypted with its existing browser data.
+
+No additional SQL migration is required. The inner journal format is now version 2 (`entries` and `reminders`); old version 1 backups still import. Refresh all diary tabs after updating: older app versions cannot read the new inner format. Existing revision conflict checks prevent stale tabs from overwriting newer saves.

@@ -32,8 +32,23 @@ test('recovery changes passphrase without losing data and preserves recovery acc
  assert.deepEqual(await V.decrypt(await V.unlock(payload,passphrase),payload),entries);
 });
 test('rejects malformed envelopes and excessive KDF parameters before derivation',async()=>{
- const payload=await V.encrypt(await fixture,entries);
+ const payload=structuredClone(await V.encrypt(await fixture,entries));
  payload.keyring.iterations=999999999;assert.throws(()=>V.validate(payload),/Unsupported/);
  await assert.rejects(()=>V.create('short',owner),/passphrase/);
  await assert.rejects(()=>V.unlock({...payload,version:999},passphrase),/Unsupported/);
+});
+test('reminders stay encrypted and survive recovery and backup round trips',async()=>{
+ const vault=await fixture;
+ const journal={version:2,entries,reminders:[{id:'reminder-secret-id',title:'Private appointment',date:'2026-12-24',done:false,updatedAt:'2026-09-16T12:00:00Z'}]};
+ const payload=await V.encrypt(vault,journal);
+ for(const secret of ['Private appointment','2026-12-24','reminder-secret-id'])assert.ok(!JSON.stringify(payload).includes(secret));
+ assert.deepEqual(await V.decrypt(await V.unlock(payload,passphrase),payload),journal);
+ const recovered=await V.recover(payload,vault.recovery,'another reminder vault passphrase');
+ assert.deepEqual(await V.decrypt(recovered,await V.encrypt(recovered,await V.decrypt(recovered,payload))),journal);
+ await assert.rejects(()=>V.encrypt(vault,{...journal,reminders:[{...journal.reminders[0],date:'2026-02-30'}]}),/Invalid entry date/);
+ assert.deepEqual(DiaryCore.journal(entries).reminders,[]);
+ assert.deepEqual(DiaryCore.due(journal.reminders,'2026-12-23'),[]);
+ assert.equal(DiaryCore.due(journal.reminders,'2026-12-24').length,1);
+ assert.equal(DiaryCore.due(journal.reminders,'2026-12-25').length,1);
+ assert.deepEqual(DiaryCore.due([{...journal.reminders[0],done:true}],'2026-12-25'),[]);
 });

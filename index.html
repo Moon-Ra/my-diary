@@ -45,7 +45,7 @@
 <div class="row"><button id="export">Export JSON</button><button id="import">Import / Restore</button></div><button id="markdown">Export Markdown (unencrypted)</button><input id="file" type="file" accept=".json,application/json" hidden><small id="backup">No backup exported yet</small><small><span id="storage-help">Saved in this browser.</span> Export a backup to keep a portable copy.</small></div></details></footer>
 </aside>
 <main>
- <div class="topbar"><button id="menu" class="mobile" aria-controls="sidebar" aria-expanded="false" aria-label="Browse journal entries">☰ Entries</button><span id="status" role="status" aria-live="polite">Ready</span><button id="save">Save <kbd>Ctrl/⌘ S</kbd></button></div>
+ <div class="topbar"><button id="menu" class="mobile" aria-controls="sidebar" aria-expanded="false" aria-label="Browse journal entries">☰ Entries</button><span id="status" role="status" aria-live="polite">Ready</span><button id="reminders-open">Reminders</button><button id="save">Save <kbd>Ctrl/⌘ S</kbd></button></div>
  <div id="notice" role="alert" hidden></div>
  <section id="empty" hidden><h1>Your quiet place</h1><p>Create an entry to start writing.</p><button id="empty-new" class="primary">New entry</button></section>
  <section id="editor">
@@ -56,7 +56,16 @@
  <footer class="row"><span id="words">0 words</span><span id="streak">0 day streak</span><button id="restore" hidden>Restore entry</button><button id="delete" class="danger">Move to Trash</button></footer>
  </section>
 </main>
-<dialog id="merge"><h2>Import backup</h2><p id="merge-summary"></p><label>Entries with matching IDs<select id="merge-choice"><option value="keep">Keep current entries</option><option value="newer">Use the more recently updated entry</option><option value="import">Use imported entries</option></select></label><p>Check the counts before applying. Export your current journal first if you want a separate recovery copy.</p><div class="row"><button id="cancel-import">Cancel</button><button id="apply-import" class="primary">Import</button></div></dialog>
+<dialog id="reminders-dialog" aria-labelledby="reminders-heading">
+ <div class="row"><h2 id="reminders-heading">Reminders</h2><button id="reminders-close" autofocus>Close</button></div>
+ <p id="reminder-summary"></p><p id="reminder-notice" role="alert" hidden></p><ul id="reminder-list"></ul>
+ <form id="reminder-form">
+  <label>Reminder<input id="reminder-title" required maxlength="300" placeholder="What would you like to remember?"></label>
+  <label>Date<input id="reminder-date" type="date" required></label>
+  <div class="row"><button id="reminder-submit" class="primary" type="submit">Add reminder</button><button id="reminder-cancel" type="button">Clear form</button></div>
+ </form><p class="muted">Reminders appear here after you open and unlock your diary. Closing this popup leaves unfinished reminders due. No notifications are sent outside the diary.</p>
+</dialog>
+<dialog id="merge"><h2>Import backup</h2><p id="merge-summary"></p><label>Entries and reminders with matching IDs<select id="merge-choice"><option value="keep">Keep current entries</option><option value="newer">Use the more recently updated entry</option><option value="import">Use imported entries</option></select></label><p>Check the counts before applying. Export your current journal first if you want a separate recovery copy.</p><div class="row"><button id="cancel-import">Cancel</button><button id="apply-import" class="primary">Import</button></div></dialog>
 <dialog id="decrypt-backup"><h2>Open encrypted backup</h2><p>Your backup is decrypted in this browser before the import preview.</p>
  <form id="decrypt-form"><label>Unlock with<select id="backup-method"><option value="passphrase">Vault passphrase used for this backup</option><option value="recovery">Recovery key</option></select></label>
  <label>Passphrase or recovery key<input id="backup-secret" type="password" autocomplete="off" required></label>

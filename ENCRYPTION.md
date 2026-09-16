@@ -22,7 +22,7 @@ If both the vault passphrase and recovery key are lost, neither the app nor a da
 - A separate random 256-bit recovery key wraps the same data key. The recovery key is displayed as 64 hexadecimal characters, grouped for readability.
 - AES-GCM additional authenticated data binds each operation to `my-diary:v2:<owner UUID>:<purpose>`. The distinct purposes are `passphrase`, `recovery`, and `journal`.
 - The data key is wrapped twice: once with the passphrase-derived key and once with the recovery key. Only the wrapped forms are stored. Runtime AES keys are non-extractable Web Crypto keys.
-- The encrypted journal contains the version 1 entry envelope, including IDs, titles, bodies, tags, dates, moods, modification dates, and Trash state. The entire snapshot is authenticated before entries are shown.
+- The encrypted journal contains a version 2 inner document with `entries` and `reminders`. Entry IDs, titles, bodies, tags, dates, moods, modification dates, and Trash state are encrypted, as are reminder IDs, titles, dates, completion flags, and modification dates. The entire snapshot is authenticated and validated before it is shown. Legacy version 1 inner envelopes remain readable; the outer encrypted format and cryptography are unchanged. Older app versions reject the new inner document rather than silently dropping reminders.
 - Public envelope fields are `format`, `version`, `owner`, `keyring` (KDF parameters and two wrapped keys), and `ciphertext` (IV and authenticated ciphertext). This same envelope is used for cloud persistence and encrypted JSON backups.
 - Each save checks a database revision under a row lock. Stale sessions fail closed and retain unsaved work for export. This is concurrency protection, not cryptographic protection against a malicious server rolling back history.
 
@@ -30,7 +30,7 @@ The passphrase recovery operation rewraps the existing data key. It does **not**
 
 ## Backups and migration
 
-**Export encrypted backup** encrypts the current in-memory journal, including unsaved edits. The backup is self-contained: its original vault passphrase or recovery key can decrypt it even after you change the current vault passphrase. Imports decrypt locally, show the existing merge preview, and are re-encrypted under the destination account's current vault.
+**Export encrypted backup** encrypts the current in-memory journal, including unsaved edits and reminders. The backup is self-contained: its original vault passphrase or recovery key can decrypt it even after you change the current vault passphrase. Imports decrypt locally, show the existing merge preview, and are re-encrypted under the destination account's current vault.
 
 Legacy plaintext JSON imports remain supported. Markdown export is intentionally unencrypted and asks for confirmation. Local mode (empty `config.js`) remains the original unencrypted browser journal; the published configured app uses cloud encryption.
 
