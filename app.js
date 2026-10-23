@@ -99,7 +99,7 @@ $('decrypt-form').onsubmit=async event=>{
  finally{$('decrypt-submit').disabled=false;}
 };
 $('cancel-import').onclick=()=>{incoming=null;$('merge').close();};
-$('apply-import').onclick=()=>{if(!incoming)return;entries=C.merge(entries,incoming.entries,$('merge-choice').value);reminders=C.merge(reminders,incoming.reminders,$('merge-choice').value);renderReminders();incoming=null;$('merge').close();persist();$('view').value='entries';load(entries.find(e=>!e.deletedAt)?.id||null);};
+$('apply-import').onclick=()=>{if(!incoming)return;entries=C.merge(entries,incoming.entries,$('merge-choice').value);reminders=C.merge(reminders,incoming.reminders,$('merge-choice').value).filter(r=>!r.done);renderReminders();incoming=null;$('merge').close();persist();$('view').value='entries';load(entries.find(e=>!e.deletedAt)?.id||null);};
 $('library-tools').open=!matchMedia('(max-width:768px)').matches;
 $('menu').onclick=()=>setMenu(true);$('close-menu').onclick=$('backdrop').onclick=()=>setMenu(false);
 matchMedia('(max-width:768px)').addEventListener('change',()=>{$('library-tools').open=!matchMedia('(max-width:768px)').matches;document.querySelector('main').inert=false;setMenu(false);});
@@ -112,7 +112,7 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLower
  if(e.key==='Tab'&&$('sidebar').classList.contains('open')&&matchMedia('(max-width:768px)').matches){const items=[...$('sidebar').querySelectorAll('a[href],button,input,select,summary')].filter(x=>!x.hidden&&!x.disabled&&x.getClientRects().length),first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 window.addEventListener('storage',e=>{if(cloudMode)return;if(e.key!==KEY&&e.key!==null)return;blocked=true;$('status').textContent='Journal changed in another tab';notice('Another tab changed storage. Export this session, reload, and import the backup to merge entries.');});
-if(!cloudMode)try{baseline=localStorage.getItem(KEY);const loaded=baseline?C.journal(JSON.parse(baseline)):{entries:[],reminders:[]};entries=loaded.entries;reminders=loaded.reminders;}catch(e){blocked=true;notice('Existing data could not be loaded and will not be overwritten. '+e.message);$('status').textContent='Storage unavailable or unreadable';if(baseline){const btn=document.createElement('button');btn.textContent='Download original data for recovery';btn.onclick=()=>download(baseline,'mydiary_recovery.json','application/json');$('notice').append(document.createElement('br'),btn);}}
+if(!cloudMode)try{baseline=localStorage.getItem(KEY);const loaded=baseline?C.journal(JSON.parse(baseline)):{entries:[],reminders:[]};entries=loaded.entries;reminders=loaded.reminders.filter(r=>!r.done);}catch(e){blocked=true;notice('Existing data could not be loaded and will not be overwritten. '+e.message);$('status').textContent='Storage unavailable or unreadable';if(baseline){const btn=document.createElement('button');btn.textContent='Download original data for recovery';btn.onclick=()=>download(baseline,'mydiary_recovery.json','application/json');$('notice').append(document.createElement('br'),btn);}}
 try{const stamp=localStorage.getItem('mydiary_last_export');if(stamp)$('backup').textContent='Last export requested '+new Date(stamp).toLocaleString();}catch{}
 load([...entries].filter(e=>!e.deletedAt).sort((a,b)=>b.date.localeCompare(a.date))[0]?.id||null);
 
@@ -127,7 +127,7 @@ function clearJournal(){
  $('mood').value='Neutral';$('filter').value='all';$('view').value='entries';$('merge').close();$('decrypt-backup').close();notice('');load(null);
 }
 function showJournal(loaded){
- const journal=C.journal(loaded);entries=journal.entries;reminders=journal.reminders;ready=true;dirty=false;setMenu(false);document.body.classList.remove('locked');$('account').hidden=true;
+ const journal=C.journal(loaded);entries=journal.entries;reminders=journal.reminders.filter(r=>!r.done);ready=true;dirty=false;setMenu(false);document.body.classList.remove('locked');$('account').hidden=true;
  $('account-email').hidden=false;$('sign-out').hidden=false;$('lock-vault').hidden=false;
  $('storage-help').textContent='Encrypted in this browser before saving.';$('export').textContent='Export encrypted backup';
  $('status').textContent='Encrypted vault unlocked';
@@ -306,13 +306,14 @@ function renderReminders(){
  $('reminders-open').textContent=due.length?`Reminders (${due.length})`:'Reminders';
  $('reminder-summary').textContent=due.length?`${due.length} due or overdue. Dates use this device’s local calendar.`:'No reminders due. Dates use this device’s local calendar.';
  $('reminder-list').replaceChildren();
- const sorted=[...reminders].sort((a,b)=>Number(a.done)-Number(b.done)||a.date.localeCompare(b.date));
+ const sorted=[...reminders].sort((a,b)=>a.date.localeCompare(b.date));
  for(const r of sorted){
   const li=document.createElement('li'),title=document.createElement('strong'),meta=document.createElement('small'),actions=document.createElement('div');
-  title.textContent=r.title;meta.textContent=`${r.date} · ${r.done?'Done':r.date<C.today()?'Overdue':r.date===C.today()?'Due today':'Upcoming'}`;
+  title.textContent=r.title;meta.textContent=`${r.date} · ${r.date<C.today()?'Overdue':r.date===C.today()?'Due today':'Upcoming'}`;
   actions.className='row';
   function button(label,action){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{if(ready)action();};actions.append(b);}
-  button(r.done?'Reopen':'Mark done',()=>{r.done=!r.done;r.updatedAt=new Date().toISOString();persist();renderReminders();});
+  // Completing a reminder removes it for good instead of parking it in the list.
+  button('Mark done',()=>{reminders=reminders.filter(x=>x.id!==r.id);persist();renderReminders();});
   button('Edit / reschedule',()=>{reminderEdit=r.id;$('reminder-title').value=r.title;$('reminder-date').value=r.date;$('reminder-submit').textContent='Save changes';$('reminder-title').focus();});
   li.append(title,meta,actions);$('reminder-list').append(li);
  }

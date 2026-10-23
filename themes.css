@@ -13,8 +13,21 @@
  [data-theme=aurora] body{
   font-family:'Space Grotesk',system-ui,sans-serif;
   background-color:var(--bg);
-  background-image:radial-gradient(ellipse at 88% 5%,#7958bf30,transparent 48%),radial-gradient(ellipse at 18% 92%,#22b5b119,transparent 52%),linear-gradient(#8cb9df06 1px,transparent 1px),linear-gradient(90deg,#8cb9df06 1px,transparent 1px);
-  background-size:auto,auto,56px 56px,56px 56px;
+  /* Starfield in three tile sizes behind everything; the grid and nebulae stay as they were. */
+  background-image:radial-gradient(#d5e9ffb8 .8px,transparent 1.5px),radial-gradient(#a8d4ff9e .9px,transparent 1.6px),radial-gradient(#f0f7ff8c 1.1px,transparent 1.9px),radial-gradient(ellipse at 88% 5%,#7958bf30,transparent 48%),radial-gradient(ellipse at 18% 92%,#22b5b119,transparent 52%),linear-gradient(#8cb9df06 1px,transparent 1px),linear-gradient(90deg,#8cb9df06 1px,transparent 1px);
+  background-size:230px 230px,340px 340px,510px 510px,auto,auto,56px 56px,56px 56px;
+  background-position:0 0,90px 140px,170px 60px,0 0,0 0,0 0,0 0;
+ }
+ /* Slow ribbons of spectral light drift above the page; sparse motes pulse on top. */
+ [data-theme=aurora] body::before{
+  content:'';position:fixed;inset:-30%;z-index:5;pointer-events:none;
+  background:radial-gradient(34% 26% at 26% 30%,#3fe8c53d,transparent 70%),radial-gradient(40% 30% at 72% 22%,#8a63ff38,transparent 72%),radial-gradient(46% 30% at 58% 76%,#2f9fe030,transparent 70%),radial-gradient(30% 22% at 84% 62%,#3fd6a830,transparent 72%);
+  filter:blur(48px);opacity:.9;will-change:transform;
+ }
+ [data-theme=aurora] body::after{
+  content:'';position:fixed;inset:0;z-index:5;pointer-events:none;
+  background:radial-gradient(circle at 12% 22%,#eafffb 0 1.5px,transparent 3px),radial-gradient(circle at 68% 12%,#d6e6ff 0 1.2px,transparent 2.8px),radial-gradient(circle at 84% 42%,#c9fff2 0 1.6px,transparent 3.2px),radial-gradient(circle at 32% 68%,#e2d9ff 0 1.3px,transparent 3px),radial-gradient(circle at 52% 88%,#eafffb 0 1.1px,transparent 2.6px),radial-gradient(circle at 22% 44%,#d6e6ff 0 1px,transparent 2.4px);
+  opacity:.55;
  }
  [data-theme=aurora] ::selection{background:#96efdf;color:#08151d}
  [data-theme=aurora] :is(button,input,select,textarea){font-family:inherit}
@@ -33,9 +46,9 @@
  [data-theme=aurora] .topbar{background:#0c1629f5;border-bottom-color:#96efdf25}
  [data-theme=aurora] #status{font-size:.8rem;letter-spacing:.025em}
  [data-theme=aurora] #editor{
-  background:radial-gradient(ellipse at 100% 0%,#62539714,transparent 50%),linear-gradient(145deg,#14223aee,#0e192cf5);
+  background:radial-gradient(ellipse at 100% 0%,#62539714,transparent 50%),radial-gradient(ellipse 70% 40% at 50% 0%,#59f0c50f,transparent 70%),linear-gradient(145deg,#14223aee,#0e192cf5);
   border:1px solid #435975;border-top-color:#95d9d088;border-radius:18px;
-  box-shadow:0 24px 60px #0004,inset 0 1px 0 #b8fff310;
+  box-shadow:0 24px 60px #0004,inset 0 1px 0 #b8fff310,0 0 90px #4de3c412;
  }
  [data-theme=aurora] #title{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:clamp(1.8rem,3.1vw,2.7rem);letter-spacing:-.055em;line-height:1.25;color:#f2f5ff}
  [data-theme=aurora] #body{font-size:1.06rem;line-height:1.9;color:#d6e1f5;letter-spacing:.005em}
@@ -66,7 +79,20 @@
  [data-theme=parchment] body{
   font-family:Georgia,'Times New Roman',serif;
   background-color:var(--bg);
-  background-image:url('assets/paper-grain.svg'),radial-gradient(ellipse at 10% 12%,#f8e9ca88,transparent 50%),radial-gradient(ellipse at 92% 88%,#7549223b,transparent 58%),repeating-linear-gradient(92deg,#69422105 0 1px,transparent 1px 5px);
+  /* Grain, tea stains, foxing speckles, and two directions of paper fibre. */
+  background-image:url('assets/paper-grain.svg'),radial-gradient(ellipse 300px 200px at 76% 24%,#8a542014,transparent 65%),radial-gradient(ellipse 260px 320px at 12% 78%,#7a4a1812,transparent 65%),radial-gradient(ellipse 180px 140px at 40% 55%,#96622a0d,transparent 70%),radial-gradient(#6b44201a .7px,transparent 1.4px),radial-gradient(ellipse at 10% 12%,#f8e9ca88,transparent 50%),radial-gradient(ellipse at 92% 88%,#7549223b,transparent 58%),repeating-linear-gradient(92deg,#69422105 0 1px,transparent 1px 5px),repeating-linear-gradient(-3deg,#5b3a1a06 0 1px,transparent 1px 7px);
+  background-size:auto,auto,auto,auto,110px 110px,auto,auto,auto,auto;
+  background-position:0 0,0 0,0 0,0 0,30px 50px,0 0,0 0,0 0,0 0;
+ }
+ /* A static vignette and warm lamplight from above; over it, a candle glow that breathes and dust that drifts. */
+ [data-theme=parchment] body::before{
+  content:'';position:fixed;inset:0;z-index:5;pointer-events:none;
+  background:radial-gradient(ellipse 125% 95% at 50% 42%,transparent 58%,#3a221026 88%,#2b170a3d 100%),radial-gradient(ellipse 60% 45% at 50% -8%,#ffe9bd40,transparent 70%);
+ }
+ [data-theme=parchment] body::after{
+  content:'';position:fixed;inset:0;z-index:5;pointer-events:none;
+  background:radial-gradient(ellipse 55% 42% at 50% 0%,#ffd98f2e,transparent 70%),radial-gradient(circle at 30% 30%,#fff3d0 0 1.4px,transparent 2.8px),radial-gradient(circle at 64% 52%,#ffedbe 0 1.1px,transparent 2.6px),radial-gradient(circle at 82% 26%,#fff6dd 0 1.2px,transparent 2.7px),radial-gradient(circle at 16% 62%,#ffefc4 0 1px,transparent 2.4px);
+  opacity:.5;
  }
  [data-theme=parchment] ::selection{background:#b97841;color:#fff9e8}
  [data-theme=parchment] :is(button,input,select,textarea){font-family:inherit}
@@ -75,7 +101,7 @@
  [data-theme=parchment] :is(.primary,button[aria-pressed=true]){background-color:#803d30;background-image:url('assets/paper-grain.svg');border-color:#663126;color:#fff3d9;box-shadow:inset 0 1px 0 #fbd99c30,0 2px 4px #4a2b1422}
  [data-theme=parchment] .primary:hover{background-color:#6e3025}
  [data-theme=parchment] :is(input,textarea)::placeholder{color:#7f694e;opacity:1}
- [data-theme=parchment] aside{background:url('assets/paper-grain.svg'),linear-gradient(90deg,#c3a070,#e2c79d 15%,#d6b98c 93%,#b78f5f);border-right:3px double #8f6b45;box-shadow:5px 0 14px #57391e18}
+ [data-theme=parchment] aside{background:url('assets/paper-grain.svg'),repeating-linear-gradient(-2deg,#5b3a1a07 0 1px,transparent 1px 6px),linear-gradient(90deg,#c3a070,#e2c79d 15%,#d6b98c 93%,#b78f5f);border-right:3px double #8f6b45;box-shadow:5px 0 14px #57391e18}
  [data-theme=parchment] aside header{border-bottom:3px double #a38357}
  [data-theme=parchment] aside footer{border-top:3px double #a38357}
  [data-theme=parchment] .brand{font:400 1.8rem/1.3 'IM FELL English',Georgia,serif;color:#633d28}
@@ -84,7 +110,9 @@
  [data-theme=parchment] .topbar{background:url('assets/paper-grain.svg'),#e6cfa8;border-bottom:3px double #ae895b}
  [data-theme=parchment] #editor{
   background-color:var(--card);
-  background-image:url('assets/paper-grain.svg'),radial-gradient(ellipse at 0% 0%,#9f6d3030,transparent 45%),radial-gradient(ellipse at 100% 100%,#9c662d29,transparent 50%),linear-gradient(90deg,#b9904a18,transparent 5%,transparent 95%,#b9904a20);
+  background-image:url('assets/paper-grain.svg'),radial-gradient(ellipse 230px 160px at 86% 10%,#8a54201c,transparent 65%),radial-gradient(ellipse 200px 260px at 4% 92%,#7a4a1814,transparent 65%),radial-gradient(#6b442012 .6px,transparent 1.3px),radial-gradient(ellipse at 0% 0%,#9f6d3030,transparent 45%),radial-gradient(ellipse at 100% 100%,#9c662d29,transparent 50%),linear-gradient(90deg,#b9904a18,transparent 5%,transparent 95%,#b9904a20);
+  background-size:auto,auto,auto,130px 130px,auto,auto,auto;
+  background-position:0 0,0 0,0 0,12px 24px,0 0,0 0,0 0;
   border:1px solid #a58557;border-radius:3px 10px 5px 2px;
   box-shadow:0 14px 30px #51341926,3px 3px 0 #d6be91,4px 4px 0 #a9895e,inset 0 0 40px #a8792920;
  }
@@ -145,4 +173,15 @@
 @media screen and (max-width:768px){
  [data-theme=parchment] #editor{width:calc(100% - 40px);margin-block:20px}
  [data-theme=parchment] #editor::before,[data-theme=parchment] #editor::after{width:18px}
+}
+
+/* Ambient motion: aurora ribbons drift, motes pulse, candlelight breathes. Off when reduced motion is preferred. */
+@media screen and (prefers-reduced-motion:no-preference){
+ [data-theme=aurora] body::before{animation:aurora-drift 52s ease-in-out infinite alternate}
+ [data-theme=aurora] body::after{animation:aurora-motes 9s ease-in-out infinite alternate}
+ [data-theme=parchment] body::after{animation:parchment-candle 7s ease-in-out infinite alternate,parchment-dust 17s ease-in-out infinite alternate}
+ @keyframes aurora-drift{from{transform:translate3d(-2.5%,-1.5%,0) rotate(-1.6deg) scale(1)}to{transform:translate3d(2.5%,2%,0) rotate(2deg) scale(1.07)}}
+ @keyframes aurora-motes{from{opacity:.32}to{opacity:.72}}
+ @keyframes parchment-candle{from{opacity:.32}to{opacity:.72}}
+ @keyframes parchment-dust{from{transform:translate3d(0,0,0)}to{transform:translate3d(1.5%,-10px,0)}}
 }

@@ -63,7 +63,7 @@
   <label>Reminder<input id="reminder-title" required maxlength="300" placeholder="What would you like to remember?"></label>
   <label>Date<input id="reminder-date" type="date" required></label>
   <div class="row"><button id="reminder-submit" class="primary" type="submit">Add reminder</button><button id="reminder-cancel" type="button">Clear form</button></div>
- </form><p class="muted">Reminders appear here after you open and unlock your diary. Closing this popup leaves unfinished reminders due. No notifications are sent outside the diary.</p>
+ </form><p class="muted">Reminders appear here after you open and unlock your diary. Closing this popup leaves unfinished reminders due, and marking one done deletes it. No notifications are sent outside the diary.</p>
 </dialog>
 <dialog id="merge"><h2>Import backup</h2><p id="merge-summary"></p><label>Entries and reminders with matching IDs<select id="merge-choice"><option value="keep">Keep current entries</option><option value="newer">Use the more recently updated entry</option><option value="import">Use imported entries</option></select></label><p>Check the counts before applying. Export your current journal first if you want a separate recovery copy.</p><div class="row"><button id="cancel-import">Cancel</button><button id="apply-import" class="primary">Import</button></div></dialog>
 <dialog id="decrypt-backup"><h2>Open encrypted backup</h2><p>Your backup is decrypted in this browser before the import preview.</p>
